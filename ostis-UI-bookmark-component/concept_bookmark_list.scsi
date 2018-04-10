@@ -1,0 +1,4 @@
+concept_bookmark_list 
+	=> nrel_main_idtf: 
+	[Список элементов в закладках]
+		(* <- lang_ru;;*);;

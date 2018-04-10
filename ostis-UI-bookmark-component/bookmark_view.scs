@@ -1,0 +1,4 @@
+bookmark_view 
+<- ui_external_languages;
+=> nrel_main_idtf: 
+	[Закладки] (* <- lang_ru;;*);;

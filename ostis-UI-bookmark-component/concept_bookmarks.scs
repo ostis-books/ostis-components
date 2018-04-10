@@ -1,0 +1,4 @@
+concept_bookmark <- concept;
+=> nrel_main_idtf: [закладки] (* <- lang_ru;;*);;
+
+concept_bookmark = [*^"file://concept_bookmark_list.scsi"*];;
