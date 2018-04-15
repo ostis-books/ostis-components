@@ -1,7 +1,7 @@
 Как установить:
 <ul>
     <li>Скопировать example.component папку в папку ostis</li>
-    <li>Скопировать example_code.scs, format.scs файлы в папку ostis/kb </li>
+    <li>Скопировать example_code.scs, format.scs, concept_bookmarks.scs, concept_bookmark_list.scsi файлы в папку ostis/kb </li>
     <li>Скопировать update_component.sh скрипт в папку ostis/scripts </li>
 </ul>
 Как запустить:
