@@ -1,0 +1,218 @@
+/* --- src/example-common.js --- */
+var Example = {};
+
+function extend(child, parent) {
+    var F = function () {
+    };
+    F.prototype = parent.prototype;
+    child.prototype = new F();
+    child.prototype.constructor = child;
+    child.superclass = parent.prototype;
+}
+
+
+/* --- src/example-paintPanel.js --- */
+/**
+ * Paint panel.
+ */
+
+BookSearch.PaintPanel = function (containerId) {
+    this.containerId = containerId;
+};
+
+BookSearch.PaintPanel.prototype = {
+
+    init: function () {
+        this._initMarkup(this.containerId);
+    },
+
+    _initMarkup: function (containerId) {
+        var container = $('#' + containerId);
+
+         var self = this;
+        container.append('<div class="sc-no-default-cmd">Поиск книги</div>');
+        container.append('<input type="button" value="Добавить поле" id="add-field-1">');
+        
+        container.append('<br>');
+        container.append('<input type = "button" value= "Добавить информацию" id = "add-info-1"> ');
+        container.append('<input type = "button" value = " Сгенерировать шаблон" id= "create-pattern">');
+
+        $('#newButton').click(function () {
+			self._showMainMenuNode();
+		});
+
+		$('#add-field-1').click(function () {
+			self._addNewParam(containerId, 1);
+		});
+
+		$('#add-info-1').click(function () {
+			self._addNewInfo();
+		});
+
+		$('#create-pattern').click(function () {
+			self._createNewPattern();
+		});
+
+    },
+
+    /* она работает!!!!*/
+	_addNewParam: function(divId, numerOfFields){
+		var container = $('#' + divId);
+        var new_param_field_addr, name_addr, age_addr, gender_addr, type_addr;
+        SCWeb.core.Server.resolveScAddr(['nrel_character_gender', 'nrel_character_name', 'nrel_main_idtf', 'nrel_character_type', 'nrel_character_age'], function(keynodes){
+        	gender_addr = keynodes['nrel_character_gender'];
+        	name_addr = keynodes['nrel_main_idtf'];
+        	type_addr = keynodes['nrel_character_type'];
+        	age_addr = keynodes['nrel_character_age'];
+
+        	var character_params = [gender_addr, name_addr, type_addr, age_addr];
+        	SCWeb.core.Server.resolveIdentifiers(character_params, function(keynodes){
+        		var character_params_name = [];
+        		var strProm = "";
+    	       	for (var i = 0; i <= character_params.length - 1; i++) {
+        			character_params_name[i] = keynodes[character_params[i]];
+        			strProm = strProm + ((i+1)+"."+" "+character_params_name[i]+"\n");
+        		}
+        		var param_to_create_addr;
+        		var attr = prompt(strProm);
+        		switch(attr){
+        			case '1': param_to_create_addr = character_params[0];
+        				break;
+        			case '2': param_to_create_addr = character_params[1];
+        				break;
+        			case '3': param_to_create_addr = character_params[2];
+        				break;
+        			case '4': param_to_create_addr = character_params[3];
+        				break;
+        		}
+        		var name_of_nrel = keynodes[param_to_create_addr];
+        		//console.log(name_of_nrel);
+        		container.append("<input type = \"text\" placeholder = \""+name_of_nrel+"\">");	
+        	});    	
+        });
+    },
+
+
+    /*добавление нового персонажа*/
+    _addNewInfo: function(){
+
+    },
+    /*формирование шаблона
+    еще не доделано*/
+    _createNewPattern: function(){
+    	// create node
+    	var concept_book_addr;
+    	SCWeb.core.Server.resolveScAddr(['concept_book'], function(keynodes){
+    		concept_book_addr = keynodes['concept_book'];
+
+    		window.sctpClient.create_node(sc_type_node).done(function (generatedNode) {
+    			window.sctpClient.create_link().done(function (generatedLink) {
+    				window.sctpClient.set_link_content(generatedLink, 'new_book');
+    				window.sctpClient.create_arc(sc_type_arc_common| sc_type_const, generatedNode, generatedLink).done(function(generatedCommonArc){
+    					window.sctpClient.create_arc(sc_type_arc_pos_const_perm, scKeynodes.nrel_system_identifer, generatedCommonArc).done(function(){
+    						console.log('generated ', generatedNode, 'new_book');
+    						resolve(generatedNode);
+    					});
+    				});
+    			});
+    		});
+    	});
+    }
+};
+
+/* --- src/example-component.js --- */
+/**
+ * Example component.
+ */
+BookSearch.DrawComponent = {
+    ext_lang: 'example_code',
+    formats: ['format_example_json'],
+    struct_support: true,
+    factory: function (sandbox) {
+        return new BookSearch.DrawWindow(sandbox);
+    }
+};
+
+BookSearch.DrawWindow = function (sandbox) {
+    this.sandbox = sandbox;
+    this.paintPanel = new BookSearch.PaintPanel(this.sandbox.container);
+    this.paintPanel.init();
+    this.recieveData = function (data) {
+        console.log("in recieve data" + data);
+    };
+
+    var scElements = {};
+
+    function drawAllElements() {
+        var dfd = new jQuery.Deferred();
+       // for (var addr in scElements) {
+            jQuery.each(scElements, function(j, val){
+                var obj = scElements[j];
+                if (!obj || obj.translated) return;
+// check if object is an arc
+                if (obj.data.type & sc_type_arc_pos_const_perm) {
+                    var begin = obj.data.begin;
+                    var end = obj.data.end;
+                    // logic for component update should go here
+                }
+
+        });
+        SCWeb.ui.Locker.hide();
+        dfd.resolve();
+        return dfd.promise();
+    }
+
+// resolve keynodes
+    var self = this;
+    this.needUpdate = false;
+    this.requestUpdate = function () {
+        var updateVisual = function () {
+// check if object is an arc
+            var dfd1 = drawAllElements();
+            dfd1.done(function (r) {
+                return;
+            });
+
+
+/// @todo: Don't update if there are no new elements
+            window.clearTimeout(self.structTimeout);
+            delete self.structTimeout;
+            if (self.needUpdate)
+                self.requestUpdate();
+            return dfd1.promise();
+        };
+        self.needUpdate = true;
+        if (!self.structTimeout) {
+            self.needUpdate = false;
+            SCWeb.ui.Locker.show();
+            self.structTimeout = window.setTimeout(updateVisual, 1000);
+        }
+    }
+    
+    this.eventStructUpdate = function (added, element, arc) {
+        window.sctpClient.get_arc(arc).done(function (r) {
+            var addr = r[1];
+            window.sctpClient.get_element_type(addr).done(function (t) {
+                var type = t;
+                var obj = new Object();
+                obj.data = new Object();
+                obj.data.type = type;
+                obj.data.addr = addr;
+                if (type & sc_type_arc_mask) {
+                    window.sctpClient.get_arc(addr).done(function (a) {
+                        obj.data.begin = a[0];
+                        obj.data.end = a[1];
+                        scElements[addr] = obj;
+                        self.requestUpdate();
+                    });
+                }
+            });
+        });
+    };
+// delegate event handlers
+    this.sandbox.eventDataAppend = $.proxy(this.receiveData, this);
+    this.sandbox.eventStructUpdate = $.proxy(this.eventStructUpdate, this);
+    this.sandbox.updateContent();
+};
+SCWeb.core.ComponentManager.appendComponentInitialize(BookSearch.DrawComponent);
+
