@@ -16,7 +16,7 @@ stage()
     echo -en $green"[$st]$rst" $blue"$1...\n"$rst
 }
 
-base_path=../example.component/src
+base_path=../components/bookmark-component/src
 sc_web_path=../sc-web/client
 sc_web_static_path=$sc_web_path/static
 
@@ -51,7 +51,7 @@ append_css()
 
 stage "Copy component"
 
-cp -Rfv $base_path/components/example/static/* $sc_web_static_path
+cp -Rfv $base_path/components/bookmarks/static/* $sc_web_static_path
 
 stage "Install component"
 
