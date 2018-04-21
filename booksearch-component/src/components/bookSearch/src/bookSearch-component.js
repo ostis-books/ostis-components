@@ -2,7 +2,7 @@
  * Example component.
  */
 BookSearch.DrawComponent = {
-    ext_lang: 'example_code',
+    ext_lang: 'book_search',
     formats: ['format_example_json'],
     struct_support: true,
     factory: function (sandbox) {

@@ -18,8 +18,6 @@ Example.PaintPanel.prototype = {
          var self = this;
         container.append('<div class="sc-no-default-cmd">Поиск книги</div>');
         container.append('<input type="button" value="Добавить поле" id="add-field-1">');
-        
-        container.append('<br>');
         container.append('<input type = "button" value= "Добавить информацию" id = "add-info-1"> ');
         container.append('<input type = "button" value = " Сгенерировать шаблон" id= "create-pattern">');
 
