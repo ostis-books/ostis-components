@@ -3,7 +3,7 @@
  */
 Example.DrawComponent = {
     ext_lang: 'bookmark_view',
-    formats: ['format_example_json'],
+    formats: ['format_bookmarks'],
     struct_support: true,
     factory: function (sandbox) {
         return new Example.DrawWindow(sandbox);
