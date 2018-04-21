@@ -1,4 +1,4 @@
-var BoorSearch = {};
+var BookSearch = {};
 
 function extend(child, parent) {
     var F = function () {

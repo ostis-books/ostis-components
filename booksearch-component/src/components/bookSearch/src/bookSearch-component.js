@@ -1,9 +1,6 @@
-/**
- * Example component.
- */
-BookSearch.DrawComponent = {
-    ext_lang: 'book_search',
-    formats: ['format_example_json'],
+    BookSearch.DrawComponent = {
+    ext_lang: 'booksearch_view',
+    formats: ['format_book_search'],
     struct_support: true,
     factory: function (sandbox) {
         return new BookSearch.DrawWindow(sandbox);
