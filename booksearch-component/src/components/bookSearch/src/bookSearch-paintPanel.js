@@ -72,7 +72,7 @@ Example.PaintPanel.prototype = {
         		var name_of_nrel = keynodes[param_to_create_addr];
         		//console.log(name_of_nrel);
         		container.append("<input type = \"text\" placeholder = \""+name_of_nrel+"\">");	
-        	});    	
+                       	});    	
         });
     },
 
