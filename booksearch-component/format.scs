@@ -1,4 +1,4 @@
-format_example_json
+format_book_search
 <- sc_node_not_relation;
 <- format;
 => nrel_main_idtf: 
