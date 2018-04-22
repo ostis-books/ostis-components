@@ -1,0 +1,4 @@
+concept_note_list 
+	=> nrel_main_idtf: 
+	[список заметок]
+		(* <- lang_ru;;*);;
