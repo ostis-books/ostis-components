@@ -55,7 +55,7 @@ cp -Rfv $base_path/components/notes/static/* $sc_web_static_path
 
 stage "Install component"
 
-append_js $sc_web_path/templates/components.html components/js/example/example.js
+append_js $sc_web_path/templates/components.html components/js/note/note.js
 
 cd ../sc-web/scripts
 ./install_deps_ubuntu.sh
