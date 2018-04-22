@@ -1,4 +1,4 @@
-    BookSearch.DrawComponent = {
+BookSearch.DrawComponent = {
     ext_lang: 'booksearch_view',
     formats: ['format_book_search'],
     struct_support: true,
