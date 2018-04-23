@@ -16,7 +16,7 @@ stage()
     echo -en $green"[$st]$rst" $blue"$1...\n"$rst
 }
 
-base_path=../components/booksearch-component/src
+base_path=../components/tag_cloud_component/src
 sc_web_path=../sc-web/client
 sc_web_static_path=$sc_web_path/static
 
@@ -51,11 +51,12 @@ append_css()
 
 stage "Copy component"
 
-cp -Rfv $base_path/components/bookSearch/static/* $sc_web_static_path
+cp -Rfv $base_path/components/tag_cloud/static/* $sc_web_static_path
 
 stage "Install component"
 
-append_js $sc_web_path/templates/components.html components/js/bookSearch/bookSearch.js
+append_js $sc_web_path/templates/components.html components/js/tag_cloud/tag_cloud.js
+append_js $sc_web_path/templates/components.html components/js/tag_cloud/jquery.tagcanvas.js
 
 cd ../sc-web/scripts
 ./install_deps_ubuntu.sh
