@@ -16,7 +16,7 @@ stage()
     echo -en $green"[$st]$rst" $blue"$1...\n"$rst
 }
 
-base_path=../tagCloud-component/src
+base_path=../components/tagCloud-component/src
 sc_web_path=../sc-web/client
 sc_web_static_path=$sc_web_path/static
 
