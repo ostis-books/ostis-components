@@ -1,2 +1,0 @@
-concept_character_gender <- concept;
-	=> nrel_main_idtf: [пол персонажа](* <- lang_ru;; *);;
