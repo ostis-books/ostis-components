@@ -1,11 +1,4 @@
-var id = 1;
-var definition;
-
-Example.PaintPanel = function (containerId) {
-    this.containerId = containerId;
-};
-
-var id = 1;
+var id = 0;
 var definition;
 
 Example.PaintPanel = function (containerId) {
@@ -17,7 +10,6 @@ Example.PaintPanel.prototype = {
         this._showNotes(this.containerId);
         this._initMarkup(this.containerId);
     },
-
     // вывод имеющихся заметок и закладок
     _showNotes: function (containerId) {
         var container = $('#' + containerId);
@@ -43,8 +35,10 @@ Example.PaintPanel.prototype = {
 					        for (var i=0; i< attr.length; i++){
 					            param = param.replace(" ", "___");
 					        }
-	                        container.append("<div id=\"" + id + "\" class=\"note\" ><button class=\"exit\" onclick=exit(" + id +"\,"+ link +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editSimpleNote(" + id+ "\,"+ link +"\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
-	                        id = id +1;
+                            if (param != "Объект___удален") { 
+                                container.append("<div id=\"" + id + "\" class=\"note\" ><button class=\"exit\" onclick=exit(" + id +"\,"+ link +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editSimpleNote(" + id+ "\,"+ link +"\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
+	                            id = id +1;
+                            }
 	                    });
                     } 
                 }); 
@@ -178,9 +172,9 @@ Example.PaintPanel.prototype = {
 function exit(id, addr) {
   var el = document.getElementById(id);
     // удаление html
-    el.parentNode.removeChild(el);
+  el.parentNode.removeChild(el);
     // удаление sc
-    window.sctpClient.set_link_content(addr, "Объект удален");
+  window.sctpClient.set_link_content(addr, "Объект удален");
 };
 
 // редактирование заметок
