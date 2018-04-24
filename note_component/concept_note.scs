@@ -1,0 +1,4 @@
+concept_note <- concept;
+=> nrel_main_idtf: [заметка] (* <- lang_ru;;*);;
+
+concept_note = [*^"file://concept_note_list.scsi"*];;
