@@ -1,4 +1,55 @@
 concept_note <- concept;
-=> nrel_main_idtf: [заметка] (* <- lang_ru;;*);;
+=> nrel_main_idtf: [заметка] (* <- lang_ru;;*);
+-> [aksmlAKMSLKA];
+-> [aasds];
+-> [123231];
+-> [dasd23219];
+<- rrel_key_sc_element: Definition_note
+	(*
+	<-definition;;
+	<=nrel_sc_text_translation:
+		...
+		(*
+		-> rrel_example: "file://htmls//concept_note.html";;	
+		*);;
+	<= nrel_using_constants:...
+		(*
+		-> knowledge;;
+		-> concept_bookmark;;
+		-> concept_booklist;;
+		*);;
+	*);;
 
-concept_note = [*^"file://concept_note_list.scsi"*];;
+Definition_note
+    => nrel_main_idtf:
+        [Опр.(заметка)]  (* <- lang_ru;; *);;
+
+
+concept_bookmark <- concept;
+=> nrel_main_idtf: [закладка] (* <- lang_ru;;*);
+<- rrel_key_sc_element: Definition_bookmark 
+	(*
+	<-definition;;
+	<=nrel_sc_text_translation:
+		...
+		(*
+		-> rrel_example: "file://htmls//concept_bookmark.html";;	
+		*);;
+	<= nrel_using_constants:...
+		(*
+		-> knowledge;;
+		-> concept_book;;
+		*);;
+	*);;
+
+Definition_bookmark
+    => nrel_main_idtf:
+        [Опр.(закладка)]  (* <- lang_ru;; *);;
+
+
+concept_booklist <- concept;
+=> nrel_main_idtf: [список к прочтению] (* <- lang_ru;;*);
+<- rrel_key_sc_element: Definition_booklist;;
+Definition_booklist
+    => nrel_main_idtf:
+        [Опр.(список к прочтению)]  (* <- lang_ru;; *);;
