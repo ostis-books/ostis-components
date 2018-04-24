@@ -1,9 +1,7 @@
 concept_note <- concept;
 => nrel_main_idtf: [заметка] (* <- lang_ru;;*);
--> [aksmlAKMSLKA];
--> [aasds];
--> [123231];
--> [dasd23219];
+-> [Прочитать Сказку о царе Султане];
+-> [Сдать 4 тома в Библиотеку];
 <- rrel_key_sc_element: Definition_note
 	(*
 	<-definition;;

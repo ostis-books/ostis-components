@@ -34,11 +34,18 @@ Example.PaintPanel.prototype = {
                         0
                     ])
                 .done(function (res) {
-                    for (var i = 0; i< res.length; i++){
-                        var attr = window.sctpClient.get_link_content(res[i][2]);
-                        addr = res[i][2];
-                        container.append("<div id=\"" + id + "\" class=\"note\"><button class=\"exit\" onclick=exit(" + id +"\,"+ addr +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editSimpleNote(" + id+ "\,"+ addr +"\,\"" + attr + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
-                        id = id +1;
+                    for (var i = 0; i < res.length; i++){
+                    	var link = res[i][2];
+                    	window.sctpClient.get_link_content(link,'string')
+                    	.done(function(attr){
+	                        var param = attr;
+					            // перевод в формат, который передастся как параметр в другие функции 
+					        for (var i=0; i< attr.length; i++){
+					            param = param.replace(" ", "___");
+					        }
+	                        container.append("<div id=\"" + id + "\" class=\"note\" ><button class=\"exit\" onclick=exit(" + id +"\,"+ link +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editSimpleNote(" + id+ "\,"+ link +"\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
+	                        id = id +1;
+	                    });
                     } 
                 }); 
                 // вывод всех закладок
@@ -49,11 +56,18 @@ Example.PaintPanel.prototype = {
                         0
                     ])
                 .done(function (res) {
-                    for (var i = 0; i< res.length; i++){
-                        var attr = window.sctpClient.get_link_content(res[i][2]);
-                        addr = res[i][2];
-                        container.append("<div id=\"" + id + "\" class=\"bookmark\"><button class=\"exit\" onclick=exit(" + id +"\,"+ addr +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editBookmark(" + id+ "\,"+ addr + "\,\"sada\" \,\"2\"\,\"dasda\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
-                        id = id +1;
+                    for (var i = 0; i < res.length; i++){
+                    	var link = res[i][2];
+                    	window.sctpClient.get_link_content(link,'string')
+                    	.done(function(attr){
+	                        var param = attr;
+					        // перевод в формат, который передастся как параметр в другие функции 
+					        for (var i=0; i< attr.length; i++){
+					            param = param.replace(" ", "___");
+					        }
+	                        container.append("<div id=\"" + id + "\" class=\"note bookmark\" ><button class=\"exit\" onclick=exit(" + id +"\,"+ link +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editBookmark(" + id+ "\,"+ link +"\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
+	                        id = id +1;
+	                    });
                     } 
                 }); 
             });
@@ -148,7 +162,7 @@ Example.PaintPanel.prototype = {
                     for (var i=0; i< attr.length; i++){
                         param = param.replace(" ", "___");
                     }
-                    container.append("<div id=\"" + id + "\" class=\"bookmark\"><button class=\"exit\" onclick=exit(" + id +"\,"+ addr +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editBookmark(" + id+ "\,"+ addr + "\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
+                    container.append("<div id=\"" + id + "\" class=\"note bookmark\"><button class=\"exit\" onclick=exit(" + id +"\,"+ addr +")><span class=\"glyphicon glyphicon-trash\"></span></button> <button class=\"edit\" onclick=editBookmark(" + id+ "\,"+ addr + "\,\"" + param + "\")><span class=\"glyphicon glyphicon-pencil\"></span></button>"+attr+"</div>"); 
                     id = id+1;
                 }
                      // привязка текста в concept_bookmark в sc
