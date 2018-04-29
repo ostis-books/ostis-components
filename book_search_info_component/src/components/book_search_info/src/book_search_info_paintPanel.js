@@ -12,42 +12,66 @@ BookSearchInfo.PaintPanel = function (containerId) {
 BookSearchInfo.PaintPanel.prototype = {
 
     init: function () {
-        this._resolveKeynodes();
         this._initMarkup(this.containerId);
+        this._resolveKeynodes();
     },
 
     _resolveKeynodes: function () {
-        requiredKeynodes = ['nrel_author', 'book', 'ui_menu_search_book_by_template'];
+        requiredKeynodes = [
+            'nrel_author',
+            'book',
+            'ui_menu_search_book_by_template',
+            'genre'
+        ];
+
+        var self = this;
 
         SCWeb.core.Server.resolveScAddr(requiredKeynodes, function(resolvedKeynodes){
-            this.keynodes = resolvedKeynodes;
+            self.keynodes = resolvedKeynodes;
+
+            // ensure that all keynodes are resolved before filling lists
+            self._fillDropDownLists();
         });
     },
 
     _initMarkup: function (containerId) {
         var container = $('#' + containerId);
-        var self = this;
 
         container.append('<div class="sc-no-default-cmd">Поиск книги:</div>');
         container.append('<label>Имя автора:<input id="author_field" type="text" placeholder="введите имя автора"></label>');
-        container.append('<input id="find_books_button" type="button" value="Найти книги">');
+        container.append('<label>Жанр:<select id="genre_select"></select>');
         container.append('<br>');
+        container.append('<input id="find_books_button" type="button" value="Найти книги">');
 
+        var self = this;
         $('#find_books_button').click(function () {
             self._findBooks();
         });
     },
 
+    _fillDropDownLists: function () {
+        // fill genres list
+        window.scHelper.getSetElements(this.keynodes['genre']).done(function (genres) {
+            $.each(genres, function (index, genre_addr) {
+                window.scHelper.getIdentifier(genre_addr, scKeynodes.lang_ru).done(function (genre_idtf) {
+                    $('#genre_select')
+                        .append($('<option>', { value : genre_addr }).text(genre_idtf));
+                })
+            });
+        });
+    },
+
     _findBooks: function () {
-        if (this.keynodes.length == 0) {
+        var self = this;
+
+        if (self.keynodes.length == 0) {
             alert("Ошибка! Не удалось найти необходимые понятия");
             return;
         }
 
         this._createSearchPattern(function (pattern) {
-
             // initiate ui_menu_search_book_by_template command
-            var command = keynodes['ui_menu_search_book_by_template'];
+            var command = self.keynodes['ui_menu_search_book_by_template'];
             SCWeb.core.Main.doCommand(command, [pattern], function (result) {
                 if (result.question != undefined) {
                     SCWeb.ui.WindowManager.appendHistoryItem(result.question);
@@ -104,12 +128,22 @@ BookSearchInfo.PaintPanel.prototype = {
                 window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, book, authorNode).done(function (authorArc) {
                     self._addToPattern(pattern, authorArc);
     
-                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, keynodes['nrel_author'], authorArc).done(function (nrelAuthorArc) {
+                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['nrel_author'], authorArc).done(function (nrelAuthorArc) {
                         self._addToPattern(pattern, nrelAuthorArc);
-                        self._addToPattern(pattern, keynodes['nrel_author']);
+                        self._addToPattern(pattern, self.keynodes['nrel_author']);
                     });
                 });
             });
+        });
+    },
+
+    _addGenreToPattern: function (pattern, book, genre) {
+        var self = this;
+        
+        // create genre arc
+        window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, genre, book).done(function (genreArc) {
+            self._addToPattern(pattern, genreArc);
+            self._addToPattern(pattern, genre);
         });
     },
 
@@ -128,8 +162,8 @@ BookSearchInfo.PaintPanel.prototype = {
 
             // create book
             window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(bookNode) {
-                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, keynodes['book'], bookNode).done(function (bookArc) {
-                    self._addToPattern(pattern, keynodes['book']);
+                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['book'], bookNode).done(function (bookArc) {
+                    self._addToPattern(pattern, self.keynodes['book']);
                     self._addToPattern(pattern, bookArc);
 
                     // append author name to pattern
@@ -137,6 +171,10 @@ BookSearchInfo.PaintPanel.prototype = {
                     if (authorName != null) {
                         self._addAuthorNameToPattern(pattern, bookNode, authorName);
                     }
+
+                    // append genre to pattern
+                    var genre = $("#genre_select option:selected").val();
+                    self._addGenreToPattern(pattern, bookNode, genre);
 
                     window.sctpClient.create_link().done(function(bookLink){
                         window.sctpClient.set_link_content(bookLink, "book_pattern");
