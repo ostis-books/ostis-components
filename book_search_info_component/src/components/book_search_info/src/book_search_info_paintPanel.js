@@ -5,7 +5,15 @@
 BookSearchInfo.PaintPanel = function (containerId) {
     this.containerId = containerId;
 
+    this.requiredKeynodes = [
+        'nrel_author',
+        'book',
+        'ui_menu_search_book_by_template',
+        'genre',
+        'nrel_original_language'
+    ];
     this.keynodes = {};
+
     this.sc_type_arc_pos_var_perm = (sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm);
 };
 
@@ -17,16 +25,9 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _resolveKeynodes: function () {
-        requiredKeynodes = [
-            'nrel_author',
-            'book',
-            'ui_menu_search_book_by_template',
-            'genre'
-        ];
-
         var self = this;
 
-        SCWeb.core.Server.resolveScAddr(requiredKeynodes, function(resolvedKeynodes){
+        SCWeb.core.Server.resolveScAddr(self.requiredKeynodes, function(resolvedKeynodes){
             self.keynodes = resolvedKeynodes;
 
             // ensure that all keynodes are resolved before filling lists
@@ -43,6 +44,10 @@ BookSearchInfo.PaintPanel.prototype = {
         cont.append('<label style="display: inline-block;">Жанр:<select id="genre_select" disabled></select></label>');
         cont.append('<label style="display: inline-block;">Учитывать жанр:<input id="genre_check" type="checkbox"></label>');
         cont.append('</div>');
+        cont.append('<div class="sc-no-default-cmd">');
+        cont.append('<label style="display: inline-block;">Язык:<select id="lang_select" disabled></select></label>');
+        cont.append('<label style="display: inline-block;">Учитывать язык:<input id="lang_check" type="checkbox"></label>');
+        cont.append('</div>');
         cont.append('<br>');
         cont.append('<input id="find_books_button" type="button" value="Найти книги">');
 
@@ -52,6 +57,12 @@ BookSearchInfo.PaintPanel.prototype = {
         $('#genre_check').click(function () {
             var checked = $('#genre_check').prop('checked');
             $('#genre_select').prop('disabled', !checked);
+        });
+
+        // enable/disable language select on checkbox click
+        $('#lang_check').click(function () {
+            var checked = $('#lang_check').prop('checked');
+            $('#lang_select').prop('disabled', !checked);
         });
 
         $('#find_books_button').click(function () {
@@ -69,12 +80,23 @@ BookSearchInfo.PaintPanel.prototype = {
                 })
             });
         });
+
+        // fill languages list
+        window.scHelper.getLanguages().done(function (languages) {
+            console.log(languages);
+            $.each(languages, function (index, lang_addr) {
+                window.scHelper.getIdentifier(lang_addr, scKeynodes.lang_ru).done(function (lang_idtf) {
+                    $('#lang_select')
+                        .append($('<option>', { value : lang_addr }).text(lang_idtf));
+                })
+            });
+        });
     },
 
     _findBooks: function () {
         var self = this;
 
-        if (self.keynodes.length == 0) {
+        if (Object.keys(self.keynodes).length != self.requiredKeynodes.length) {
             alert("Ошибка! Не удалось найти необходимые понятия");
             return;
         }
@@ -101,7 +123,9 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _addToPattern: function (pattern, addr) {
-        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, addr);
+        window.scHelper.checkEdge(pattern, sc_type_arc_pos_const_perm, addr).fail(function () {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, addr);
+        });
     },
 
     _addAuthorNameToPattern: function (pattern, book, authorName) {
@@ -157,6 +181,21 @@ BookSearchInfo.PaintPanel.prototype = {
         });
     },
 
+    _addLanguageToPattern: function (pattern, book, lang) {
+        var self = this;
+        
+        // create language arc
+        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, book, lang).done(function (langArc) {
+            self._addToPattern(pattern, langArc);
+            self._addToPattern(pattern, lang);
+
+            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['nrel_original_language'], langArc).done(function (nrelLangArc) {
+                self._addToPattern(pattern, nrelLangArc);
+                self._addToPattern(pattern, self.keynodes['nrel_original_language']);
+            });
+        });
+    },
+
     _createSearchPattern: function (onCreated) {
         if (this._checkIfFieldsEmpty()) {
             alert("Необходимо заполнить хотя бы одно поле.");
@@ -186,6 +225,12 @@ BookSearchInfo.PaintPanel.prototype = {
                     if ($("#genre_check").prop('checked')) {
                         var genre = $("#genre_select option:selected").val();
                         self._addGenreToPattern(pattern, bookNode, genre);
+                    }
+
+                    // append language to pattern
+                    if ($("#lang_check").prop('checked')) {
+                        var lang = $("#lang_select option:selected").val();
+                        self._addLanguageToPattern(pattern, bookNode, lang);
                     }
 
                     window.sctpClient.create_link().done(function(bookLink){
