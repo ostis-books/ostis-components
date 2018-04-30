@@ -127,7 +127,6 @@ BookSearchInfo.PaintPanel.prototype = {
 
         // fill languages list
         window.scHelper.getLanguages().done(function (languages) {
-            console.log(languages);
             $.each(languages, function (index, lang_addr) {
                 window.scHelper.getIdentifier(lang_addr, scKeynodes.lang_ru).done(function (lang_idtf) {
                     $('#lang_select')
@@ -157,13 +156,19 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _checkIfFieldsEmpty: function () {
-        var allFieldsEmpty = true;
-
         if ($("#author_field").val() != "") {
-            allFieldsEmpty = false;
+            return false;
         }
 
-        return allFieldsEmpty;
+        if ($("#genre_check").prop('checked')) {
+            return false;
+        }
+
+        if ($("#lang_check").prop('checked')) {
+            return false;
+        }
+
+        return true;
     },
 
     _addToPattern: function (pattern, addr) {
@@ -242,7 +247,7 @@ BookSearchInfo.PaintPanel.prototype = {
 
     _createSearchPattern: function (onCreated) {
         if (this._checkIfFieldsEmpty()) {
-            alert("Необходимо заполнить хотя бы одно поле.");
+            alert("Необходимо задать хотя бы один критерий поиска.");
             return;
         }
 
@@ -261,7 +266,7 @@ BookSearchInfo.PaintPanel.prototype = {
 
                     // append author name to pattern
                     var authorName = $("#author_field").val();
-                    if (authorName != null) {
+                    if (authorName != "") {
                         self._addAuthorNameToPattern(pattern, bookNode, authorName);
                     }
 
