@@ -35,15 +35,25 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _initMarkup: function (containerId) {
-        var container = $('#' + containerId);
+        var cont = $('#' + containerId);
 
-        container.append('<div class="sc-no-default-cmd">Поиск книги:</div>');
-        container.append('<label>Имя автора:<input id="author_field" type="text" placeholder="введите имя автора"></label>');
-        container.append('<label>Жанр:<select id="genre_select"></select>');
-        container.append('<br>');
-        container.append('<input id="find_books_button" type="button" value="Найти книги">');
+        cont.append('<div class="sc-no-default-cmd">Поиск книги:</div>');
+        cont.append('<label>Имя автора:<input id="author_field" type="text" placeholder="введите имя автора"></label>');
+        cont.append('<div class="sc-no-default-cmd">');
+        cont.append('<label style="display: inline-block;">Жанр:<select id="genre_select" disabled></select></label>');
+        cont.append('<label style="display: inline-block;">Учитывать жанр:<input id="genre_check" type="checkbox"></label>');
+        cont.append('</div>');
+        cont.append('<br>');
+        cont.append('<input id="find_books_button" type="button" value="Найти книги">');
 
         var self = this;
+
+        // enable/disable genre select on checkbox click
+        $('#genre_check').click(function () {
+            var checked = $('#genre_check').prop('checked');
+            $('#genre_select').prop('disabled', !checked);
+        });
+
         $('#find_books_button').click(function () {
             self._findBooks();
         });
@@ -173,8 +183,10 @@ BookSearchInfo.PaintPanel.prototype = {
                     }
 
                     // append genre to pattern
-                    var genre = $("#genre_select option:selected").val();
-                    self._addGenreToPattern(pattern, bookNode, genre);
+                    if ($("#genre_check").prop('checked')) {
+                        var genre = $("#genre_select option:selected").val();
+                        self._addGenreToPattern(pattern, bookNode, genre);
+                    }
 
                     window.sctpClient.create_link().done(function(bookLink){
                         window.sctpClient.set_link_content(bookLink, "book_pattern");
