@@ -38,18 +38,62 @@ BookSearchInfo.PaintPanel.prototype = {
     _initMarkup: function (containerId) {
         var cont = $('#' + containerId);
 
-        cont.append('<div class="sc-no-default-cmd">Поиск книги:</div>');
-        cont.append('<label>Имя автора:<input id="author_field" type="text" placeholder="введите имя автора"></label>');
-        cont.append('<div class="sc-no-default-cmd">');
-        cont.append('<label style="display: inline-block;">Жанр:<select id="genre_select" disabled></select></label>');
-        cont.append('<label style="display: inline-block;">Учитывать жанр:<input id="genre_check" type="checkbox"></label>');
-        cont.append('</div>');
-        cont.append('<div class="sc-no-default-cmd">');
-        cont.append('<label style="display: inline-block;">Язык:<select id="lang_select" disabled></select></label>');
-        cont.append('<label style="display: inline-block;">Учитывать язык:<input id="lang_check" type="checkbox"></label>');
-        cont.append('</div>');
-        cont.append('<br>');
-        cont.append('<input id="find_books_button" type="button" value="Найти книги">');
+        // book search panel
+        cont.append(
+            '<div class="panel panel-primary" id="book_search_panel" style="width: 70%;">' +
+                '<div class="panel-heading"><h4 class="panel-title">Поиск книг</h4></div>' +
+            '</div>'
+        );
+
+        // form
+        $('#book_search_panel').append('<div class="container-fluid"><form id="book_search_form">');
+
+        // author name
+        $('#book_search_form').append(
+            '<div class="form-group row">' +
+                '<label class="col-sm-2 col-form-label" for="author_field">Имя автора:</label>' +
+                '<div class="col-sm-7">' +
+                    '<input id="author_field" class="form-control" type="text" placeholder="введите имя автора">' +
+                '</div>' +
+            '</div>'
+        );
+
+        // genre
+        $('#book_search_form').append(
+            '<div class="form-group row">' + 
+                '<label class="col-sm-2 col-form-label" for="genre_select">Жанр:</label>' +
+                '<div class="col-sm-4">' +
+                    '<select id="genre_select" class="form-control" disabled></select>' +
+                '</div>' +
+                '<div class="form-check col-sm-3">' +
+                    '<input id="genre_check" class="form-check-input" type="checkbox">' +
+                    '<label class="form-check-label" for="genre_check"> Учитывать жанр</label>' +
+                '</div>' +
+            '</div>'
+        );
+
+        // language
+        $('#book_search_form').append(
+            '<div class="form-group row">' + 
+                '<label class="col-sm-2 col-form-label" for="lang_select">Язык:</label>' +
+                '<div class="col-sm-4">' +
+                    '<select id="lang_select" class="form-control" disabled></select>' +
+                '</div>' +
+                '<div class="form-check col-sm-3">' +
+                    '<input id="lang_check" class="form-check-input" type="checkbox">' +
+                    '<label class="form-check-label" for="lang_check"> Учитывать язык</label>' +
+                '</div>' +
+            '</div>'
+        );
+
+        // submit button
+        $('#book_search_form').append(
+            '<div class="form-group row">' + 
+                '<div class="col-sm-10">' +
+                    '<button id="find_books_button" type="submit" class="btn btn-primary">Найти книги</button>' +
+                '</div>' +
+            '</div>'
+        );
 
         var self = this;
 
