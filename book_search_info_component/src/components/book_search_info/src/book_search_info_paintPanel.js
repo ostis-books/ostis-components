@@ -46,7 +46,7 @@ BookSearchInfo.PaintPanel.prototype = {
         );
 
         // form
-        $('#book_search_panel').append('<div class="container-fluid"><form id="book_search_form">');
+        $('#book_search_panel').append('<div class="container-fluid" id="book_search_container"><form id="book_search_form">');
 
         // author name
         $('#book_search_form').append(
@@ -65,9 +65,9 @@ BookSearchInfo.PaintPanel.prototype = {
                 '<div class="col-sm-4">' +
                     '<select id="genre_select" class="form-control" disabled></select>' +
                 '</div>' +
-                '<div class="form-check col-sm-3">' +
+                '<div class="form-check col-sm-3 book_search_checkbox">' +
                     '<input id="genre_check" class="form-check-input" type="checkbox">' +
-                    '<label class="form-check-label" for="genre_check"> Учитывать жанр</label>' +
+                    '<label class="form-check-label book_search_checkbox_label" for="genre_check">Учитывать жанр</label>' +
                 '</div>' +
             '</div>'
         );
@@ -79,9 +79,9 @@ BookSearchInfo.PaintPanel.prototype = {
                 '<div class="col-sm-4">' +
                     '<select id="lang_select" class="form-control" disabled></select>' +
                 '</div>' +
-                '<div class="form-check col-sm-3">' +
+                '<div class="form-check col-sm-3 book_search_checkbox">' +
                     '<input id="lang_check" class="form-check-input" type="checkbox">' +
-                    '<label class="form-check-label" for="lang_check"> Учитывать язык</label>' +
+                    '<label class="form-check-label book_search_checkbox_label" for="lang_check">Учитывать язык</label>' +
                 '</div>' +
             '</div>'
         );
@@ -90,7 +90,7 @@ BookSearchInfo.PaintPanel.prototype = {
         $('#book_search_form').append(
             '<div class="form-group row">' + 
                 '<div class="col-sm-10">' +
-                    '<button id="find_books_button" type="submit" class="btn btn-primary">Найти книги</button>' +
+                    '<button id="find_books_button" type="button" class="btn btn-primary" value>Найти книги</button>' +
                 '</div>' +
             '</div>'
         );

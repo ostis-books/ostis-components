@@ -56,6 +56,7 @@ cp -Rfv $base_path/components/book_search_info/static/* $sc_web_static_path
 stage "Install component"
 
 append_js $sc_web_path/templates/components.html components/js/book_search_info/book_search_info.js
+append_css $sc_web_path/templates/components.html components/css/book_search_info.css
 
 cd ../sc-web/scripts
 ./install_deps_ubuntu.sh
