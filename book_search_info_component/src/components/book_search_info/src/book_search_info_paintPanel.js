@@ -1,6 +1,4 @@
-/**
- * Paint panel.
- */
+// PaintPanel
 
 BookSearchInfo.PaintPanel = function (containerId) {
     this.containerId = containerId;
@@ -10,7 +8,9 @@ BookSearchInfo.PaintPanel = function (containerId) {
         'book',
         'ui_menu_search_book_by_template',
         'genre',
-        'nrel_original_language'
+        'nrel_original_language',
+        'nrel_sc_text_translation',
+        'resolving_link'
     ];
     this.keynodes = {};
 
@@ -136,6 +136,10 @@ BookSearchInfo.PaintPanel.prototype = {
         });
     },
 
+    _debugMessage: function (message) {
+        console.log("book-search: " + message);
+    },
+
     _findBooks: function () {
         var self = this;
 
@@ -145,30 +149,35 @@ BookSearchInfo.PaintPanel.prototype = {
         }
 
         this._createSearchPattern(function (pattern) {
+            self._debugMessage("initiating search agent");
+
             // initiate ui_menu_search_book_by_template command
             var command = self.keynodes['ui_menu_search_book_by_template'];
             SCWeb.core.Main.doCommand(command, [pattern], function (result) {
+                console.log("pattern executed");
                 if (result.question != undefined) {
                     SCWeb.ui.WindowManager.appendHistoryItem(result.question);
                 }
             });
-        });
+        });    
     },
 
-    _checkIfFieldsEmpty: function () {
+    _getSelectedCriteriaCount: function () {
+        var criteriaCount = 0;
+
         if ($("#author_field").val() != "") {
-            return false;
+            ++criteriaCount;
         }
 
         if ($("#genre_check").prop('checked')) {
-            return false;
+            ++criteriaCount;
         }
 
         if ($("#lang_check").prop('checked')) {
-            return false;
+            ++criteriaCount;
         }
 
-        return true;
+        return criteriaCount;
     },
 
     _addToPattern: function (pattern, addr) {
@@ -177,19 +186,30 @@ BookSearchInfo.PaintPanel.prototype = {
         });
     },
 
-    _addAuthorNameToPattern: function (pattern, book, authorName) {
+    _addAuthorNameToPattern: function (pattern, book, authorName, onAdd) {
         var self = this;
 
-        // create link with author name
-        window.sctpClient.create_link().done(function (authorLink) {
-            window.sctpClient.set_link_content(authorLink, authorName);
+        // create variable node that corresponds to link with author name
+        window.sctpClient.create_node(sc_type_var).done(function (authorNameNode) {
+            self._addToPattern(pattern, authorNameNode);
 
-            self._addToPattern(pattern, authorLink);
+            // mark author name node as a link that needs to be resolved
+            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['resolving_link'], authorNameNode);
 
             // create language arc
-            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.lang_ru, authorLink).done(function (authorLinkArc) {
+            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.lang_ru, authorNameNode).done(function (languageArc) {
                 self._addToPattern(pattern, scKeynodes.lang_ru);
-                self._addToPattern(pattern, authorLinkArc);
+                self._addToPattern(pattern, languageArc);
+            });
+
+            // create link with author name
+            window.sctpClient.create_link().done(function (authorLink) {
+                window.sctpClient.set_link_content(authorLink, authorName);
+
+                // create nrel_sc_text_translation arc
+                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, authorLink, authorNameNode).done(function (translationArc) {
+                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['nrel_sc_text_translation'], translationArc);
+                });
             });
 
             // create author
@@ -198,7 +218,7 @@ BookSearchInfo.PaintPanel.prototype = {
                 self._addToPattern(pattern, authorNode);
 
                 // create nrel_main_idtf relation
-                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, authorNode, authorLink).done(function (authorIdtfArc) {
+                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, authorNode, authorNameNode).done(function (authorIdtfArc) {
                     self._addToPattern(pattern, authorIdtfArc);
     
                     window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.nrel_main_idtf, authorIdtfArc).done(function (nrelIdtfArc) {
@@ -214,86 +234,113 @@ BookSearchInfo.PaintPanel.prototype = {
                     window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['nrel_author'], authorArc).done(function (nrelAuthorArc) {
                         self._addToPattern(pattern, nrelAuthorArc);
                         self._addToPattern(pattern, self.keynodes['nrel_author']);
+
+                        self._debugMessage("add author to pattern");
+                        onAdd();
                     });
                 });
             });
+
         });
     },
 
-    _addGenreToPattern: function (pattern, book, genre) {
+    _addGenreToPattern: function (pattern, book, genre, onAdd) {
         var self = this;
         
         // create genre arc
         window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, genre, book).done(function (genreArc) {
             self._addToPattern(pattern, genreArc);
             self._addToPattern(pattern, genre);
+
+            self._debugMessage("add genre to pattern");
+            onAdd();
         });
     },
 
-    _addLanguageToPattern: function (pattern, book, lang) {
+    _addLanguageToPattern: function (pattern, book, lang, onAdd) {
         var self = this;
         
         // create language arc
-        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, book, lang).done(function (langArc) {
+        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, lang, book).done(function (langArc) {
             self._addToPattern(pattern, langArc);
             self._addToPattern(pattern, lang);
 
             window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['nrel_original_language'], langArc).done(function (nrelLangArc) {
                 self._addToPattern(pattern, nrelLangArc);
                 self._addToPattern(pattern, self.keynodes['nrel_original_language']);
+
+                self._debugMessage("add language to pattern");
+                onAdd();
             });
         });
     },
 
     _createSearchPattern: function (onCreated) {
-        if (this._checkIfFieldsEmpty()) {
+        this.criteriaCount = this._getSelectedCriteriaCount();
+        if (this.criteriaCount == 0) {
             alert("Необходимо задать хотя бы один критерий поиска.");
             return;
         }
 
         var self = this;
-        var pattern = null;
 
         // create pattern
         window.sctpClient.create_node(sc_type_node | sc_type_const).done(function(patternNode) {
-            pattern = patternNode;
+            var pattern = patternNode;
 
             // create book
             window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(bookNode) {
+                self._addToPattern(pattern, bookNode);
+
+                // connect book to book class
                 window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['book'], bookNode).done(function (bookArc) {
                     self._addToPattern(pattern, self.keynodes['book']);
                     self._addToPattern(pattern, bookArc);
 
-                    // append author name to pattern
-                    var authorName = $("#author_field").val();
-                    if (authorName != "") {
-                        self._addAuthorNameToPattern(pattern, bookNode, authorName);
-                    }
-
-                    // append genre to pattern
-                    if ($("#genre_check").prop('checked')) {
-                        var genre = $("#genre_select option:selected").val();
-                        self._addGenreToPattern(pattern, bookNode, genre);
-                    }
-
-                    // append language to pattern
-                    if ($("#lang_check").prop('checked')) {
-                        var lang = $("#lang_select option:selected").val();
-                        self._addLanguageToPattern(pattern, bookNode, lang);
-                    }
-
+                    // set system identifier for pattern
                     window.sctpClient.create_link().done(function(bookLink){
                         window.sctpClient.set_link_content(bookLink, "book_pattern");
                         window.sctpClient.create_arc(sc_type_arc_common | sc_type_const, bookNode, bookLink).done(function(bookLinkArc){
                             window.sctpClient.create_arc(sc_type_arc_pos_const_perm, scKeynodes.nrel_system_identifier, bookLinkArc);
+
+                            self._appendSelectedCriteria(pattern, bookNode, onCreated);
                         });
-                    });                    
+                    });
                 });
-
-                self._addToPattern(pattern, bookNode);
-
-                onCreated(pattern);
             });
         });
+    },
+
+    _appendSelectedCriteria: function (pattern, book, onAppend) {
+        var self = this;
+
+        var totalCriteriaCount = self._getSelectedCriteriaCount();
+        var currentCriteriaCount = 0;
+
+        appendCriteria = function () {
+            currentCriteriaCount += 1;
+
+            if (currentCriteriaCount == totalCriteriaCount) {
+                onAppend(pattern);
+            }
+        }
+
+        // append author name to pattern
+        var authorName = $("#author_field").val();
+        if (authorName != "") {
+            self._addAuthorNameToPattern(pattern, book, authorName, appendCriteria);
+        }
+
+        // append genre to pattern
+        if ($("#genre_check").prop('checked')) {
+            var genre = $("#genre_select option:selected").val();
+            self._addGenreToPattern(pattern, book, genre, appendCriteria);
+        }
+
+        // append language to pattern
+        if ($("#lang_check").prop('checked')) {
+            var lang = $("#lang_select option:selected").val();
+            self._addLanguageToPattern(pattern, book, lang, appendCriteria);
+        }
     }
 };
