@@ -3,6 +3,9 @@
  */
  var numerOfFields = 1;
  var patternIsCreated = false;
+ var genderParamIs = false;
+ var nameParamIs = false;
+ var typeParamIs = false;
 
 BookSearch.PaintPanel = function (containerId) {
     this.containerId = containerId;
@@ -35,6 +38,7 @@ BookSearch.PaintPanel.prototype = {
                 container.append('<input type="button" class = "button-search" value="Добавить поле" id="add-field-1">');
                 container.append('<input type = "button" class = "button-search" value= "Добавить информацию" id = "add-info-1"> ');
                 container.append('<input type = "button" class = "button-search" value = " Сгенерировать шаблон" id= "create-pattern">');
+                container.append('<input type = "button" class = "button-search" value = " Начать поиск" id= "search-button">');
                 container.append('<br>');
 
                 $('#newButton').click(function () {
@@ -52,7 +56,14 @@ BookSearch.PaintPanel.prototype = {
                 $('#create-pattern').click(function () {
                     self._createNewPattern(numerOfFields, response);
                 });
+                $('#search-button').click(function () {
+                    self._searchBook(numerOfFields, response);
+                });                
             });
+    },
+
+    _searchBook: function(numerOfFields, allInfoNode){
+        alert('пока в разработке');
     },
 
     _addNewParam: function(divId){
@@ -83,18 +94,21 @@ BookSearch.PaintPanel.prototype = {
                 var param_to_create_addr;
                 var attr = prompt(strProm);
                 switch(attr){
-                    case '1': param_to_create_addr = character_params[0];
+                    case '1': if(!genderParamIs){param_to_create_addr = character_params[0];
                         container.append("<select id =\"gender_id\"><option value=\""+ male_addr+"\">Мужской</option><option value=\""+ fem_addr+"\">Женский</option></select>");
-                        genderParamIs = true;
+                        genderParamIs = true;}
+                        else{alert("Вы уже добавляли данный параметр");}
                         break;
-                    case '2': param_to_create_addr = character_params[1];
+                    case '2': if(!nameParamIs){param_to_create_addr = character_params[1];
                         var name_of_nrel = keynodes[param_to_create_addr];
                         container.append("<input type = \"text\" placeholder = \""+name_of_nrel+"\" id = \"name_id\">"); 
-                        nameParamIs = true;
+                        nameParamIs = true;}
+                        else {alert("Вы уже добавляли данный параметр");}
                         break;
-                    case '3': param_to_create_addr = character_params[2];
+                    case '3': if (!typeParamIs){param_to_create_addr = character_params[2];
                         container.append("<select placeholder = \"Выберите вид персонажа\" id = \"type_id\"><option value = \""+person_addr+"\">Человек</option><option value = \""+dog_addr+"\">Пес</option><option value=\""+cat_addr+"\">Кот</option></select>");
-                        typeParamIs = true;
+                        typeParamIs = true;}
+                        else {alert("Вы уже добавляли данный параметр");}
                         break;
                     // case '4': param_to_create_addr = character_params[3];
                     // var name_of_nrel = keynodes[param_to_create_addr];
@@ -113,6 +127,10 @@ BookSearch.PaintPanel.prototype = {
             $("#gender_id").remove();
             $("#type_id").remove();
             numerOfFields++;
+            genderParamIs = false;
+            nameParamIs = false;
+            typeParamIs = false;
+
         }
         else alert("Необходимо сформировать шаблон, иначе данные будут потеряны!");
 
@@ -138,12 +156,12 @@ BookSearch.PaintPanel.prototype = {
                     window.sctpClient.create_link().done(function(nameGenCharLink){
                         window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharName);
                         window.sctpClient.set_link_content(nameGenCharLink, temp_char);
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharLink);
+                        //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharLink);
                         window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, nameGenCharName, nameGenCharLink).done(function(nameGenCharCommonArc){
-                            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharCommonArc);
+                            //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharCommonArc);
                             window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.nrel_system_identifier, nameGenCharCommonArc).done(function(nameGenCharHelpArc_1){
-                                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharHelpArc_1);
-                                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_system_identifier);
+                                //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharHelpArc_1);
+                                //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_system_identifier);
                                 console.log('generated ', nameGenCharName, temp_char);
                                 window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, char_addr, nameGenCharName);
                                 resolve(nameGenCharName);
@@ -153,13 +171,16 @@ BookSearch.PaintPanel.prototype = {
                 });
             }).then((response) => {
 
-                if($("#name_id").val() != ""){    
+                if($("#name_id").val() != undefined){    
                     console.log($("#name_id").val());
                     window.sctpClient.create_link().done(function(nameGenCharIdtf){
                         window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharIdtf);
                         window.sctpClient.set_link_content(nameGenCharIdtf, $("#name_id").val());
                         window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, response, nameGenCharIdtf).done(function(nameGenCharCommonArc_2){
-                             window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.nrel_main_idtf, nameGenCharCommonArc_2);
+                             window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.nrel_main_idtf, nameGenCharCommonArc_2).done(function(genHelp_Arc){
+                                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, genHelp_Arc);
+                             });
+                             window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_main_idtf);
                              window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharCommonArc_2);
                         });
                         window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.lang_ru, nameGenCharIdtf).done( function(nameGenCharHelpArc_2){
