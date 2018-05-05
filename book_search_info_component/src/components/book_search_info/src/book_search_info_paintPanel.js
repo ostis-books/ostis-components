@@ -10,7 +10,8 @@ BookSearchInfo.PaintPanel = function (containerId) {
         'genre',
         'nrel_original_language',
         'nrel_sc_text_translation',
-        'resolving_link'
+        'resolving_link',
+        'book_search_pattern'
     ];
     this.keynodes = {};
 
@@ -285,25 +286,25 @@ BookSearchInfo.PaintPanel.prototype = {
         var self = this;
 
         // create pattern
-        window.sctpClient.create_node(sc_type_node | sc_type_const).done(function(patternNode) {
-            var pattern = patternNode;
+        window.sctpClient.create_node(sc_type_node | sc_type_const).done(function(pattern) {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, self.keynodes['book_search_pattern'], pattern)
 
             // create book
-            window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(bookNode) {
-                self._addToPattern(pattern, bookNode);
+            window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(book) {
+                self._addToPattern(pattern, book);
 
                 // connect book to book class
-                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['book'], bookNode).done(function (bookArc) {
+                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.keynodes['book'], book).done(function (bookArc) {
                     self._addToPattern(pattern, self.keynodes['book']);
                     self._addToPattern(pattern, bookArc);
 
                     // set system identifier for pattern
                     window.sctpClient.create_link().done(function(bookLink){
                         window.sctpClient.set_link_content(bookLink, "book_pattern");
-                        window.sctpClient.create_arc(sc_type_arc_common | sc_type_const, bookNode, bookLink).done(function(bookLinkArc){
+                        window.sctpClient.create_arc(sc_type_arc_common | sc_type_const, book, bookLink).done(function(bookLinkArc){
                             window.sctpClient.create_arc(sc_type_arc_pos_const_perm, scKeynodes.nrel_system_identifier, bookLinkArc);
 
-                            self._appendSelectedCriteria(pattern, bookNode, onCreated);
+                            self._appendSelectedCriteria(pattern, book, onCreated);
                         });
                     });
                 });
