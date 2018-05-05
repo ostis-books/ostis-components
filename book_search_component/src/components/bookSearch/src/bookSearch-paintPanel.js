@@ -64,6 +64,15 @@ BookSearch.PaintPanel.prototype = {
 
     _searchBook: function(numerOfFields, allInfoNode){
         alert('пока в разработке');
+
+    /*    SCWeb.core.Server.resolveScAddr(["allInfoNode_full_semantic_neighborhood"], function(data){
+            var cmd = data["allInfoNode_full_semantic_neighborhood"];
+            SCWeb.core.Main.doCommand(cmd, [allInfoNode], function(result){
+                if (result.question != undefined){
+                    SCWeb.ui.WindowManager.appendHistoryItem(result.question);
+                }            
+            });
+        });*/
     },
 
     _addNewParam: function(divId){
@@ -163,7 +172,10 @@ BookSearch.PaintPanel.prototype = {
                                 //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharHelpArc_1);
                                 //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_system_identifier);
                                 console.log('generated ', nameGenCharName, temp_char);
-                                window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, char_addr, nameGenCharName);
+                                window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, char_addr, nameGenCharName).done(function(genArc){
+                                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, genArc);
+                                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, char_addr);
+                                });
                                 resolve(nameGenCharName);
                             });
                         });
