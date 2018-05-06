@@ -1,3 +1,0 @@
-concept_character_age <- concept;
-	=> nrel_main_idtf: [возраст персонажа](* <- lang_ru;; *);;
-

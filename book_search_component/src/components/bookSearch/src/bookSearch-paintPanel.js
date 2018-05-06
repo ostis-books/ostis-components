@@ -9,6 +9,8 @@
 
 BookSearch.PaintPanel = function (containerId) {
     this.containerId = containerId;
+
+    this.sc_type_arc_pos_var_perm = sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm;
 };
 
 BookSearch.PaintPanel.prototype = {
@@ -41,10 +43,6 @@ BookSearch.PaintPanel.prototype = {
                 container.append('<input type = "button" class = "button-search" value = " Начать поиск" id= "search-button">');
                 container.append('<br>');
 
-                $('#newButton').click(function () {
-                    self._showMainMenuNode();
-                });
-
                 $('#add-field-1').click(function () {
                     self._addNewParam(containerId);
                 });
@@ -57,35 +55,53 @@ BookSearch.PaintPanel.prototype = {
                     self._createNewPattern(numerOfFields, response);
                 });
                 $('#search-button').click(function () {
-                    self._searchBook(numerOfFields, response);
+                    self._searchBook(response);
                 });                
             });
     },
 
-    _searchBook: function(numerOfFields, allInfoNode){
-        alert('пока в разработке');
+    _searchBook: function(allInfoNode){
+        console.log("run search");
 
-    /*    SCWeb.core.Server.resolveScAddr(["allInfoNode_full_semantic_neighborhood"], function(data){
-            var cmd = data["allInfoNode_full_semantic_neighborhood"];
+        SCWeb.core.Server.resolveScAddr(["ui_menu_search_book_by_characters"], function(data){
+            var cmd = data["ui_menu_search_book_by_characters"];
             SCWeb.core.Main.doCommand(cmd, [allInfoNode], function(result){
                 if (result.question != undefined){
                     SCWeb.ui.WindowManager.appendHistoryItem(result.question);
                 }            
             });
-        });*/
+        });
+    },
+
+    _addToPattern: function (pattern, addr) {
+        window.scHelper.checkEdge(pattern, sc_type_arc_pos_const_perm, addr).fail(function () {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, addr);
+        });
     },
 
     _addNewParam: function(divId){
 
         var container = $('#' + divId);
         var new_param_field_addr, name_addr, age_addr, gender_addr, type_addr, fem_addr, male_addr;
-        SCWeb.core.Server.resolveScAddr(['nrel_character_gender', 'nrel_character_name', 'nrel_main_idtf', 'nrel_character_type'/*, 'nrel_character_age'*/, 'concept_female', 'concept_male', 'concept_person', 'concept_dog', 'concept_cat' ], function(keynodes){
+        var resolving_addrs = [
+            'nrel_character_gender',
+            'nrel_character_name',
+            'nrel_main_idtf',
+            'nrel_character_type',
+            'female_character',
+            'male_character',
+            'concept_person',
+            'concept_dog',
+            'concept_cat'
+        ];
+
+        SCWeb.core.Server.resolveScAddr(resolving_addrs, function(keynodes){
             gender_addr = keynodes['nrel_character_gender'];
             name_addr = keynodes['nrel_main_idtf'];
             type_addr = keynodes['nrel_character_type'];
             // age_addr = keynodes['nrel_character_age'];
-            fem_addr = keynodes['concept_female'];
-            male_addr = keynodes['concept_male'];  
+            fem_addr = keynodes['female_character'];
+            male_addr = keynodes['male_character'];  
             person_addr = keynodes['concept_person'];
             dog_addr = keynodes['concept_dog'];
             cat_addr = keynodes['concept_cat'];         
@@ -146,16 +162,30 @@ BookSearch.PaintPanel.prototype = {
     },
     /*формирование шаблона*/
     _createNewPattern: function(numerOfFields, allInfoNode){
+        var self = this;
         
         var  fem_addr, male_addr, person_addr, dog_addr, cat_addr, char_addr;
-        SCWeb.core.Server.resolveScAddr(['concept_female', 'concept_male', 'concept_person', 'concept_dog', 'concept_cat', 'concept_character' ], function(keynodes){
+        var resolving_addrs = [
+            'female_character',
+            'male_character',
+            'concept_person',
+            'concept_dog',
+            'concept_cat',
+            'lit_person',
+            'resolving_link',
+            'nrel_sc_text_translation'
+        ];
+
+        SCWeb.core.Server.resolveScAddr(resolving_addrs, function(keynodes){
             
-            fem_addr = keynodes['concept_female'];
-            male_addr = keynodes['concept_male'];
+            fem_addr = keynodes['female_character'];
+            male_addr = keynodes['male_character'];
             person_addr = keynodes['concept_person'];
             dog_addr = keynodes['concept_dog'];
             cat_addr = keynodes['concept_cat'];
-            char_addr = keynodes['concept_character'];
+            char_addr = keynodes['lit_person'];
+            resolving_link = keynodes['resolving_link'];
+            translation = keynodes['nrel_sc_text_translation'];
 
             var temp_char = 'new_char_' + numerOfFields;
 
@@ -163,18 +193,19 @@ BookSearch.PaintPanel.prototype = {
             new Promise (function(resolve){
                 window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(nameGenCharName){
                     window.sctpClient.create_link().done(function(nameGenCharLink){
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharName);
+                        self._addToPattern(allInfoNode, nameGenCharName);
+
                         window.sctpClient.set_link_content(nameGenCharLink, temp_char);
                         //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharLink);
                         window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, nameGenCharName, nameGenCharLink).done(function(nameGenCharCommonArc){
                             //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharCommonArc);
-                            window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.nrel_system_identifier, nameGenCharCommonArc).done(function(nameGenCharHelpArc_1){
+                            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.nrel_system_identifier, nameGenCharCommonArc).done(function(nameGenCharHelpArc_1){
                                 //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharHelpArc_1);
                                 //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_system_identifier);
                                 console.log('generated ', nameGenCharName, temp_char);
-                                window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, char_addr, nameGenCharName).done(function(genArc){
-                                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, genArc);
-                                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, char_addr);
+                                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, char_addr, nameGenCharName).done(function(genArc){
+                                    self._addToPattern(allInfoNode, genArc);
+                                    self._addToPattern(allInfoNode, char_addr);
                                 });
                                 resolve(nameGenCharName);
                             });
@@ -183,23 +214,41 @@ BookSearch.PaintPanel.prototype = {
                 });
             }).then((response) => {
 
-                if($("#name_id").val() != undefined){    
+                if($("#name_id").val() != ""){    
                     console.log($("#name_id").val());
-                    window.sctpClient.create_link().done(function(nameGenCharIdtf){
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharIdtf);
-                        window.sctpClient.set_link_content(nameGenCharIdtf, $("#name_id").val());
-                        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, response, nameGenCharIdtf).done(function(nameGenCharCommonArc_2){
-                             window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.nrel_main_idtf, nameGenCharCommonArc_2).done(function(genHelp_Arc){
-                                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, genHelp_Arc);
-                             });
-                             window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, scKeynodes.nrel_main_idtf);
-                             window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharCommonArc_2);
+
+                    // создаем замещаемую ссылку
+                    window.sctpClient.create_node(sc_type_var).done(function (nameGenCharVar) {
+                        self._addToPattern(allInfoNode, nameGenCharVar);
+
+                        // добавляем созданный узел во множество замещаемых ссылок
+                        window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, resolving_link, nameGenCharVar);
+
+                        // связываем персонажа с замещаемой ссылкой онтошением nrel_main_idtf
+                        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, response, nameGenCharVar).done(function(nameGenCharArc){
+                            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.nrel_main_idtf, nameGenCharArc).done(function(nameGenCharIdtfArc){
+                               self._addToPattern(allInfoNode, nameGenCharIdtfArc);
+                            });
+
+                            self._addToPattern(allInfoNode, scKeynodes.nrel_main_idtf);
+                            self._addToPattern(allInfoNode, nameGenCharArc);
                         });
-                        window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, scKeynodes.lang_ru, nameGenCharIdtf).done( function(nameGenCharHelpArc_2){
-                            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode,nameGenCharHelpArc_2);
-                            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode,scKeynodes.lang_ru);
+
+                        // добавляем русский язык к замещаемой ссылке
+                        window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.lang_ru, nameGenCharVar).done(function(nameGenCharVarLangArc) {
+                            self._addToPattern(allInfoNode, nameGenCharVarLangArc);
+                            self._addToPattern(allInfoNode, scKeynodes.lang_ru);
                         });
-                 });
+
+                        // создаем реальную ссылку и связываем её с замещаемой при помощи nrel_sc_text_translation
+                        window.sctpClient.create_link().done(function(nameGenCharIdtf){
+                            window.sctpClient.set_link_content(nameGenCharIdtf, $("#name_id").val());
+                            window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, nameGenCharIdtf, nameGenCharVar).done(function(translationArc){
+                                 window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, translation, translationArc);
+                            });
+                            
+                        });
+                    });
                 // -------------------------------------
                 }
                 
@@ -214,9 +263,9 @@ BookSearch.PaintPanel.prototype = {
                         case 'Кот' : charType = cat_addr;
                             break; 
                     }
-                    window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, charType, response).done(function(nameGenCharType){
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode,nameGenCharType);
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode,charType);
+                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, charType, response).done(function(nameGenCharType){
+                        self._addToPattern(allInfoNode, nameGenCharType);
+                        self._addToPattern(allInfoNode, charType);
                     });
                 }
                 if($( "#gender_id option:selected" ).text() != ""){
@@ -228,9 +277,9 @@ BookSearch.PaintPanel.prototype = {
                         case 'Женский': charGender = fem_addr;
                             break; 
                     }
-                    window.sctpClient.create_arc(sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm, charGender, response).done(function(nameGenCharGender){
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenCharGender);
-                        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, charGender);
+                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, charGender, response).done(function(nameGenCharGender){
+                        self._addToPattern(allInfoNode, nameGenCharGender);
+                        self._addToPattern(allInfoNode, charGender);
                     });
                 }
                 

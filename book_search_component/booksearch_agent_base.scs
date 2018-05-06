@@ -7,14 +7,6 @@ nrel_character_age
 nrel_character_type 
 	=> nrel_main_idtf: [вид персонажа*](*<- lang_ru;;*);;
 
-concept_female 
-	=> nrel_main_idtf: [Женский персонаж](*<- lang_ru;;*);
-	<- sc_node_not_relation;;
-
-concept_male
-	=> nrel_main_idtf: [Мужской персонаж](*<- lang_ru;;*);
-	<- sc_node_not_relation;;
-
 concept_person 
 	=> nrel_main_idtf: [Человек](*<- lang_ru;;*);
 	<- sc_node_not_relation;;
@@ -25,8 +17,4 @@ concept_cat
 
 concept_dog 
 	=> nrel_main_idtf: [Пес](*<- lang_ru;;*);
-	<- sc_node_not_relation;;
-
-concept_character 
-	=> nrel_main_idtf: [Персонаж](*<- lang_ru;;*);
 	<- sc_node_not_relation;;
