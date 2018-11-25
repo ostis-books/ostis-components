@@ -8,33 +8,34 @@ ModuleGeneralInfo.prototype = {
 
     getRequiredKeynodes: function () {
         return [
-            'nrel_author',
             'genre',
-            'nrel_original_language',
-            'nrel_sc_text_translation',
-            'resolving_link'
+            'rrel_1',
+            'rrel_2',
+            'rrel_3',
+            'rrel_4',
+            'rrel_5',
+            'question_append_general_info_to_pattern'
         ];
     },
 
     getSelectedCriteriaCount: function () {
         var criteriaCount = 0;
 
-        if ($("#author_field").val() != "") {
+        if ($("#author_field").val() != "")
             ++criteriaCount;
-        }
 
-        if ($("#genre_check").prop('checked')) {
+        if ($("#genre_check").prop('checked'))
             ++criteriaCount;
-        }
 
-        if ($("#lang_check").prop('checked')) {
+        if ($("#lang_check").prop('checked'))
             ++criteriaCount;
-        }
 
         return criteriaCount;
     },
 
     initMarkup : function (containerId) {
+        this.parent._debugMessage("ModuleGeneralInfo: initializing html");
+
         var container = $('#' + containerId);
 
         // form
@@ -96,38 +97,94 @@ ModuleGeneralInfo.prototype = {
         this._fillDropDownLists();
     },
 
-    appendSelectedCriteria: function (pattern, book, onCriteriaAppended) {
+    appendCriteriaToPattern: function (pattern) {
+        this.parent._debugMessage("ModuleGeneralInfo: appending selected criteria to pattern");
 
-        var totalCriteriaCount = this.getSelectedCriteriaCount();
-        var currentCriteriaCount = 0;
+        var dfd = new jQuery.Deferred();
 
-        appendCriteria = function () {
-            currentCriteriaCount += 1;
+        window.sctpClient.create_node(sc_type_const).done(params => {
+            
+            var promises = [];
+            promises.push(this.parent.appendParameter(params, pattern, this._getKeynode("rrel_1")));
+            
+            var authorName = $("#author_field").val();
+            if (authorName != "")
+                promises.push(this._appendAuthorNameParameter(params));
 
-            if (currentCriteriaCount == totalCriteriaCount) {
-                onCriteriaAppended(pattern);
-            }
-        }
+            if ($("#genre_check").prop('checked'))
+                promises.push(this._appendGenreParameter(params));
 
-        var self = this;
+            if ($("#lang_check").prop('checked'))
+                promises.push(this._appendLanguageParameter(params));
 
-        // append author name to pattern
-        var authorName = $("#author_field").val();
-        if (authorName != "") {
-            self._addAuthorNameToPattern(pattern, book, authorName, appendCriteria);
-        }
+            Promise.all(promises).then(() => {
+                this.parent.initializeAgent('question_append_general_info_to_pattern', params).done(
+                    () => dfd.resolve()
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).catch(
+                () => dfd.reject()
+            );
 
-        // append genre to pattern
-        if ($("#genre_check").prop('checked')) {
-            var genre = $("#genre_select option:selected").val();
-            self._addGenreToPattern(pattern, book, genre, appendCriteria);
-        }
+        }).fail(
+            () => dfd.reject()
+        );
 
-        // append language to pattern
-        if ($("#lang_check").prop('checked')) {
-            var lang = $("#lang_select option:selected").val();
-            self._addLanguageToPattern(pattern, book, lang, appendCriteria);
-        }
+        return dfd.promise();
+    },
+
+    _appendAuthorNameParameter: function (params) {
+        var dfd = new jQuery.Deferred();
+
+        this.parent._debugMessage("ModuleGeneralInfo: appending author name");
+        
+        window.sctpClient.create_link().done(authorLink => {
+            var authorName = $("#author_field").val();
+            window.sctpClient.set_link_content(authorLink, authorName).done(() => {
+                this.parent.appendParameter(params, authorLink, this._getKeynode("rrel_2")).done(
+                    () => dfd.resolve()
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendGenreParameter: function (params) {
+        var dfd = new jQuery.Deferred();
+
+        this.parent._debugMessage("ModuleGeneralInfo: appending genre");
+
+        var genre = $("#genre_select option:selected").val();
+        this.parent.appendParameter(params, genre, this._getKeynode("rrel_3")).done(
+            () => dfd.resolve()
+        ).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendLanguageParameter: function (params) {
+        var dfd = new jQuery.Deferred();
+
+        this.parent._debugMessage("ModuleGeneralInfo: appending language");
+
+        var lang = $("#lang_select option:selected").val();
+        this.parent.appendParameter(params, lang, this._getKeynode("rrel_4")).done(
+            () => dfd.resolve()
+        ).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
     },
 
     _getKeynode: function (idtf) {
@@ -138,117 +195,20 @@ ModuleGeneralInfo.prototype = {
         this.parent._debugMessage("ModuleGeneralInfo: filling dropdown lists");
 
         // fill genres list
-        window.scHelper.getSetElements(this._getKeynode('genre')).done(function (genres) {
-            $.each(genres, function (index, genre_addr) {
-                window.scHelper.getIdentifier(genre_addr, scKeynodes.lang_ru).done(function (genre_idtf) {
-                    $('#genre_select')
-                        .append($('<option>', { value : genre_addr }).text(genre_idtf));
+        window.scHelper.getSetElements(this._getKeynode('genre')).done(genres => {
+            $.each(genres, (index, genre_addr) => {
+                window.scHelper.getIdentifier(genre_addr, scKeynodes.lang_ru).done(genre_idtf => {
+                    $('#genre_select').append($('<option>', { value : genre_addr }).text(genre_idtf));
                 })
             });
         });
 
         // fill languages list
-        window.scHelper.getLanguages().done(function (languages) {
-            $.each(languages, function (index, lang_addr) {
-                window.scHelper.getIdentifier(lang_addr, scKeynodes.lang_ru).done(function (lang_idtf) {
-                    $('#lang_select')
-                        .append($('<option>', { value : lang_addr }).text(lang_idtf));
+        window.scHelper.getLanguages().done(languages => {
+            $.each(languages, (index, lang_addr) => {
+                window.scHelper.getIdentifier(lang_addr, scKeynodes.lang_ru).done(lang_idtf => {
+                    $('#lang_select').append($('<option>', { value : lang_addr }).text(lang_idtf));
                 })
-            });
-        });
-    },
-
-    _addToPattern: function (pattern, addr) {
-        window.scHelper.checkEdge(pattern, sc_type_arc_pos_const_perm, addr).fail(function () {
-            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, addr);
-        });
-    },
-
-    _addAuthorNameToPattern: function (pattern, book, authorName, onAdded) {
-        var self = this;
-
-        // create variable node that corresponds to link with author name
-        window.sctpClient.create_node(sc_type_var).done(function (authorNameNode) {
-            self._addToPattern(pattern, authorNameNode);
-
-            // mark author name node as a link that needs to be resolved
-            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self._getKeynode('resolving_link'), authorNameNode);
-
-            // create language arc
-            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.lang_ru, authorNameNode).done(function (languageArc) {
-                self._addToPattern(pattern, scKeynodes.lang_ru);
-                self._addToPattern(pattern, languageArc);
-            });
-
-            // create link with author name
-            window.sctpClient.create_link().done(function (authorLink) {
-                window.sctpClient.set_link_content(authorLink, authorName);
-
-                // create nrel_sc_text_translation arc
-                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, authorLink, authorNameNode).done(function (translationArc) {
-                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self._getKeynode('nrel_sc_text_translation'), translationArc);
-                });
-            });
-
-            // create author
-            window.sctpClient.create_node(sc_type_var).done(function (authorNode) {
-                // TODO: add authorNode to person class
-                self._addToPattern(pattern, authorNode);
-
-                // create nrel_main_idtf relation
-                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, authorNode, authorNameNode).done(function (authorIdtfArc) {
-                    self._addToPattern(pattern, authorIdtfArc);
-    
-                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, scKeynodes.nrel_main_idtf, authorIdtfArc).done(function (nrelIdtfArc) {
-                        self._addToPattern(pattern, nrelIdtfArc);
-                        self._addToPattern(pattern, scKeynodes.nrel_main_idtf);
-                    });
-                });
-
-                // create nrel_author relation
-                window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, book, authorNode).done(function (authorArc) {
-                    self._addToPattern(pattern, authorArc);
-    
-                    window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self._getKeynode('nrel_author'), authorArc).done(function (nrelAuthorArc) {
-                        self._addToPattern(pattern, nrelAuthorArc);
-                        self._addToPattern(pattern, self._getKeynode('nrel_author'));
-
-                        self.parent._debugMessage("add author to pattern");
-                        onAdded();
-                    });
-                });
-            });
-
-        });
-    },
-
-    _addGenreToPattern: function (pattern, book, genre, onAdded) {
-        var self = this;
-        
-        // create genre arc
-        window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, genre, book).done(function (genreArc) {
-            self._addToPattern(pattern, genreArc);
-            self._addToPattern(pattern, genre);
-
-            self.parent._debugMessage("add genre to pattern");
-            onAdded();
-        });
-    },
-
-    _addLanguageToPattern: function (pattern, book, lang, onAdded) {
-        var self = this;
-        
-        // create language arc
-        window.sctpClient.create_arc(sc_type_arc_common | sc_type_var, lang, book).done(function (langArc) {
-            self._addToPattern(pattern, langArc);
-            self._addToPattern(pattern, lang);
-
-            window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self._getKeynode('nrel_original_language'), langArc).done(function (nrelLangArc) {
-                self._addToPattern(pattern, nrelLangArc);
-                self._addToPattern(pattern, self._getKeynode('nrel_original_language'));
-
-                self.parent._debugMessage("add language to pattern");
-                onAdded();
             });
         });
     }

@@ -16,25 +16,32 @@ BookSearchInfo.PaintPanel = function (containerId) {
 BookSearchInfo.PaintPanel.prototype = {
 
     init: function () {
-        this._initMarkup(this.containerId);
+        this._debugMessage("SearchComponent: initialize");
 
+        this._initMarkup(this.containerId);
         this._resolveKeynodes();
     },
+
+    getKeynode: function (idtf) {
+        return this.keynodes[idtf];
+    },
+
 
     _collectRequiredKeynodes: function () {
         var requiredKeynodes = [
             'book',
             'ui_menu_search_book_by_template',
-            'book_search_pattern'
+            'book_search_pattern',
+            'question_initiated',
+            'question_finished'
         ];
 
         // gather keynodes, that are required by modules
         // without duplicates
-        this.modules.forEach(function (module) {
-            module.getRequiredKeynodes().forEach(function (keynode) {
-                if (!requiredKeynodes.includes(keynode)) {
+        this.modules.forEach(module => {
+            module.getRequiredKeynodes().forEach(keynode => {
+                if (!requiredKeynodes.includes(keynode))
                     requiredKeynodes.push(keynode);
-                }
             });
         });
 
@@ -42,22 +49,20 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _resolveKeynodes: function () {
-        var self = this;
+        SCWeb.core.Server.resolveScAddr(this.requiredKeynodes, resolvedKeynodes => {
+            this.keynodes = resolvedKeynodes;
 
-        SCWeb.core.Server.resolveScAddr(self.requiredKeynodes, function(resolvedKeynodes) {
-            self.keynodes = resolvedKeynodes;
+            this._debugMessage("SearchComponent: keynodes resolved");
 
-            self.modules.forEach(function (module) {
-                module.onKeynodesResolved();
-            });
+            this.modules.forEach(
+                module => module.onKeynodesResolved()
+            );
         });
     },
 
-    getKeynode: function (idtf) {
-        return this.keynodes[idtf];
-    },
-
     _initMarkup: function (containerId) {
+        this._debugMessage("SearchComponent: initializing html");
+
         var cont = $('#' + containerId);
 
         // book search panel
@@ -68,9 +73,9 @@ BookSearchInfo.PaintPanel.prototype = {
         );
 
         // initialize modules markup
-        this.modules.forEach(function(module) {
-            module.initMarkup("book_search_panel");
-        });
+        this.modules.forEach(
+            module => module.initMarkup("book_search_panel")
+        );
 
         // submit button
         $('#book_search_panel').append(
@@ -79,107 +84,171 @@ BookSearchInfo.PaintPanel.prototype = {
             '</div>'
         );
 
-        var self = this;
-
-        $('#find_books_button').click(function () {
-            self._findBooks();
-        });
-    },
-
-    _debugMessage: function (message) {
-        console.log("book-search: " + message);
-    },
-
-    _findBooks: function () {
-        var self = this;
-
-        if (Object.keys(self.keynodes).length != self.requiredKeynodes.length) {
-            alert("Ошибка! Не удалось найти необходимые понятия");
-            return;
-        }
-
-        this._createSearchPattern(function (pattern) {
-            self._debugMessage("initiating search agent");
-
-            // initiate ui_menu_search_book_by_template command
-            var command = self.getKeynode('ui_menu_search_book_by_template');
-            SCWeb.core.Main.doCommand(command, [pattern], function (result) {
-                self._debugMessage("pattern executed");
-
-                if (result.question != undefined) {
-                    SCWeb.ui.WindowManager.appendHistoryItem(result.question);
-                }
-            });
-        });    
+        $('#find_books_button').click(
+            () => this._findBooks()
+        );
     },
 
     _getTotalSelectedCriteriaCount: function () {
         var criteriaCount = 0;
 
-        this.modules.forEach(function (module) {
-            criteriaCount += module.getSelectedCriteriaCount();
-        });
+        this.modules.forEach(
+            module => criteriaCount += module.getSelectedCriteriaCount()
+        );
 
         return criteriaCount;
     },
 
-    _getModulesCount: function () {
-        return this.modules.length;
+    _findBooks: function () {
+        this._debugMessage("SearchComponent: start searching books");
+
+        if (Object.keys(this.keynodes).length != this.requiredKeynodes.length) {
+            alert("Ошибка! Не удалось найти необходимые понятия");
+            return;
+        }
+
+        this._createSearchPattern().done(pattern => {
+            this._debugMessage("SearchComponent: initiating search agent");
+
+            // initiate ui_menu_search_book_by_template command
+            var command = this.getKeynode('ui_menu_search_book_by_template');
+            SCWeb.core.Main.doCommand(command, [pattern], result => {
+                this._debugMessage("pattern executed");
+
+                if (result.question != undefined)
+                    SCWeb.ui.WindowManager.appendHistoryItem(result.question);
+            });
+        });    
     },
 
-    _addToPattern: function (pattern, addr) {
-        window.scHelper.checkEdge(pattern, sc_type_arc_pos_const_perm, addr).fail(function () {
-            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, addr);
-        });
-    },
-
-    _createSearchPattern: function (onPatternCreated) {
-        this.criteriaCount = this._getTotalSelectedCriteriaCount();
-        if (this.criteriaCount == 0) {
+    _createSearchPattern: function () {
+        if (this._getTotalSelectedCriteriaCount() == 0) {
             alert("Необходимо задать хотя бы один критерий поиска.");
             return;
         }
 
-        var self = this;
+        var dfd = new jQuery.Deferred();
+
+        this._debugMessage("SearchComponent: creating search pattern");
 
         // create pattern
-        window.sctpClient.create_node(sc_type_node | sc_type_const).done(function(pattern) {
-            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, self.getKeynode('book_search_pattern'), pattern)
+        window.sctpClient.create_node(sc_type_node | sc_type_const).done(pattern => {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, this.getKeynode('book_search_pattern'), pattern)
 
             // create book
-            window.sctpClient.create_node(sc_type_node | sc_type_var).done(function(book) {
-                self._addToPattern(pattern, book);
+            window.sctpClient.create_node(sc_type_node | sc_type_var).done(book => {
+                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, book);
 
                 // connect book to book class
-                window.sctpClient.create_arc(self.sc_type_arc_pos_var_perm, self.getKeynode('book'), book).done(function (bookArc) {
-                    self._addToPattern(pattern, self.getKeynode('book'));
-                    self._addToPattern(pattern, bookArc);
+                window.sctpClient.create_arc(this.sc_type_arc_pos_var_perm, this.getKeynode('book'), book).done(bookArc => {
+                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, bookArc);
+                    window.sctpClient.create_arc(sc_type_arc_pos_const_perm, pattern, this.getKeynode('book'));
 
-                    // set system identifier for pattern
-                    window.sctpClient.create_link().done(function(bookLink){
-                        window.sctpClient.set_link_content(bookLink, "book_pattern");
-                        window.sctpClient.create_arc(sc_type_arc_common | sc_type_const, book, bookLink).done(function(bookLinkArc){
-                            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, scKeynodes.nrel_system_identifier, bookLinkArc);
+                    // fill created pattern with selected criteria
+                    this._fillSearchPattern(pattern).done(
+                        () => dfd.resolve(pattern)
+                    ).fail(
+                        () => dfd.reject()
+                    );
 
-                            // append modules criteria to the created pattern
-                            var totalModules = self._getModulesCount();
-                            var preparedModules = 0;
+                }).fail(
+                    () => dfd.reject()
+                );
+            }).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _fillSearchPattern: function (pattern) {
+        this._debugMessage("SearchComponent: filling search pattern with criteria");
+
+        var dfd = new jQuery.Deferred();
+        var promises = [];
                     
-                            modulePreparationFinished = function () {
-                                preparedModules += 1;
-                    
-                                if (preparedModules == totalModules) {
-                                    onPatternCreated(pattern);
-                                }
-                            }
+        // append modules criteria to the pattern
+        this.modules.forEach(
+            module => promises.push(module.appendCriteriaToPattern(pattern))
+        );
 
-                            self.modules.forEach(function (module) {
-                                module.appendSelectedCriteria(pattern, book, modulePreparationFinished);
-                            });
-                        });
+        Promise.all(promises).then(
+            () => dfd.resolve()
+        ).catch(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    appendParameter: function (params, param, rrel_ordinal) {
+        var dfd = new jQuery.Deferred();
+        
+        window.sctpClient.create_arc(sc_type_arc_pos_const_perm, params, param).done(param_arc => {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, rrel_ordinal, param_arc).done(
+                () => dfd.resolve()
+            ).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    createQuestion: function (question_class, params) {
+        var dfd = new jQuery.Deferred();
+
+        window.sctpClient.create_node(sc_type_const).done(question => {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, question, params).done(() => {
+                window.sctpClient.create_arc(sc_type_arc_pos_const_perm, question_class, question).done(
+                    () => dfd.resolve(question)
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    initializeAgent: function (question_idtf, params) {
+        var dfd = new jQuery.Deferred();
+
+        this._debugMessage("SearchComponent: initializing agent '" + question_idtf + "'");
+
+        this.createQuestion(this.getKeynode(question_idtf), params).done(question => {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, this.getKeynode('question_initiated'), question).done(() => {
+                var eventID;
+                window.sctpClient.event_create(SctpEventType.SC_EVENT_ADD_INPUT_ARC, question, () => {
+                    window.scHelper.checkEdge(this.getKeynode('question_finished'), sc_type_arc_pos_const_perm, question).done(() => {
+                        window.sctpClient.event_destroy(eventID);
+                        dfd.resolve();
                     });
-                });
-            });
-        });
+                }).done(
+                    (ID) => eventID = ID
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _debugMessage: function (message) {
+        console.log(message);
     }
 };
