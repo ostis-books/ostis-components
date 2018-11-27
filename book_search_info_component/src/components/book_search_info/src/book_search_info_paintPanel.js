@@ -4,7 +4,8 @@ BookSearchInfo.PaintPanel = function (containerId) {
     this.containerId = containerId;
 
     this.modules = [
-        new ModuleGeneralInfo(this)
+        new ModuleGeneralInfo(this),
+        new ModuleCharacters(this)
     ];
 
     this.requiredKeynodes = this._collectRequiredKeynodes();

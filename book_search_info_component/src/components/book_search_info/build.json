@@ -3,7 +3,8 @@
         
         "src/book_search_info_common.js",
         "src/book_search_info_paintPanel.js",
-        "src/book_search_module_general_info.js"
+        "src/book_search_module_general_info.js",
+        "src/book_search_module_characters.js"
     ],
 
     "component": "src/book_search_info_component.js",
