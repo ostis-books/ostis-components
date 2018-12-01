@@ -1,7 +1,5 @@
 function ModuleGeneralInfo(parent) {
     this.parent = parent;
-
-    this.sc_type_arc_pos_var_perm = (sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm);
 }
 
 ModuleGeneralInfo.prototype = {
@@ -9,11 +7,6 @@ ModuleGeneralInfo.prototype = {
     getRequiredKeynodes: function () {
         return [
             'genre',
-            'rrel_1',
-            'rrel_2',
-            'rrel_3',
-            'rrel_4',
-            'rrel_5',
             'question_append_general_info_to_pattern'
         ];
     },
@@ -34,7 +27,7 @@ ModuleGeneralInfo.prototype = {
     },
 
     initMarkup : function (containerId) {
-        this.parent._debugMessage("ModuleGeneralInfo: initializing html");
+        this._debugMessage("initializing html");
 
         var container = $('#' + containerId);
 
@@ -93,12 +86,12 @@ ModuleGeneralInfo.prototype = {
     },
 
     onKeynodesResolved: function () {
-        this.parent._debugMessage("ModuleGeneralInfo: keynodes resolved");
+        this._debugMessage("keynodes resolved");
         this._fillDropDownLists();
     },
 
     appendCriteriaToPattern: function (pattern) {
-        this.parent._debugMessage("ModuleGeneralInfo: appending selected criteria to pattern");
+        this._debugMessage("appending selected criteria to pattern");
 
         var dfd = new jQuery.Deferred();
 
@@ -137,7 +130,7 @@ ModuleGeneralInfo.prototype = {
     _appendAuthorNameParameter: function (params) {
         var dfd = new jQuery.Deferred();
 
-        this.parent._debugMessage("ModuleGeneralInfo: appending author name");
+        this._debugMessage("appending author name");
         
         window.sctpClient.create_link().done(authorLink => {
             var authorName = $("#author_field").val();
@@ -160,7 +153,7 @@ ModuleGeneralInfo.prototype = {
     _appendGenreParameter: function (params) {
         var dfd = new jQuery.Deferred();
 
-        this.parent._debugMessage("ModuleGeneralInfo: appending genre");
+        this._debugMessage("appending genre");
 
         var genre = $("#genre_select option:selected").val();
         this.parent.appendParameter(params, genre, this._getKeynode("rrel_3")).done(
@@ -175,7 +168,7 @@ ModuleGeneralInfo.prototype = {
     _appendLanguageParameter: function (params) {
         var dfd = new jQuery.Deferred();
 
-        this.parent._debugMessage("ModuleGeneralInfo: appending language");
+        this._debugMessage("appending language");
 
         var lang = $("#lang_select option:selected").val();
         this.parent.appendParameter(params, lang, this._getKeynode("rrel_4")).done(
@@ -192,7 +185,7 @@ ModuleGeneralInfo.prototype = {
     },
 
     _fillDropDownLists: function () {
-        this.parent._debugMessage("ModuleGeneralInfo: filling dropdown lists");
+        this._debugMessage("filling dropdown lists");
 
         // fill genres list
         window.scHelper.getSetElements(this._getKeynode('genre')).done(genres => {
@@ -211,5 +204,9 @@ ModuleGeneralInfo.prototype = {
                 })
             });
         });
+    },
+
+    _debugMessage: function (msg) {
+        this.parent._debugMessage("ModuleGeneralInfo: " + msg);
     }
 };

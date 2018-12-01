@@ -34,7 +34,12 @@ BookSearchInfo.PaintPanel.prototype = {
             'ui_menu_search_book_by_template',
             'book_search_pattern',
             'question_initiated',
-            'question_finished'
+            'question_finished',
+            'rrel_1',
+            'rrel_2',
+            'rrel_3',
+            'rrel_4',
+            'rrel_5'
         ];
 
         // gather keynodes, that are required by modules
@@ -80,8 +85,8 @@ BookSearchInfo.PaintPanel.prototype = {
 
         // submit button
         $('#book_search_panel').append(
-            '<div class="col-sm-10">' +
-                '<button id="find_books_button" type="button" class="btn btn-primary" value>Найти книги</button>' +
+            '<div class="col-sm-12" style="margin-top: 10px;">' +
+                '<button id="find_books_button" type="button" class="btn btn-primary btn-block" value>Найти книги</button>' +
             '</div>'
         );
 
@@ -108,6 +113,11 @@ BookSearchInfo.PaintPanel.prototype = {
             return;
         }
 
+        if (this._getTotalSelectedCriteriaCount() == 0) {
+            alert("Необходимо задать хотя бы один критерий поиска.");
+            return;
+        }
+
         this._createSearchPattern().done(pattern => {
             this._debugMessage("SearchComponent: initiating search agent");
 
@@ -123,11 +133,6 @@ BookSearchInfo.PaintPanel.prototype = {
     },
 
     _createSearchPattern: function () {
-        if (this._getTotalSelectedCriteriaCount() == 0) {
-            alert("Необходимо задать хотя бы один критерий поиска.");
-            return;
-        }
-
         var dfd = new jQuery.Deferred();
 
         this._debugMessage("SearchComponent: creating search pattern");
