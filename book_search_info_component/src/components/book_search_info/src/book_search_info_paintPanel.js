@@ -172,9 +172,10 @@ BookSearchInfo.PaintPanel.prototype = {
         var promises = [];
                     
         // append modules criteria to the pattern
-        this.modules.forEach(
-            module => promises.push(module.appendCriteriaToPattern(pattern))
-        );
+        this.modules.forEach( module => {
+            if (module.getSelectedCriteriaCount() > 0)
+                promises.push(module.appendCriteriaToPattern(pattern))
+        });
 
         Promise.all(promises).then(
             () => dfd.resolve()
@@ -224,18 +225,35 @@ BookSearchInfo.PaintPanel.prototype = {
     initializeAgent: function (question_idtf, params) {
         var dfd = new jQuery.Deferred();
 
-        this._debugMessage("SearchComponent: initializing agent '" + question_idtf + "'");
+        this._debugMessage(`SearchComponent: initializing agent '${question_idtf}'`);
 
-        this.createQuestion(this.getKeynode(question_idtf), params).done(question => {
-            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, this.getKeynode('question_initiated'), question).done(() => {
+        this.createQuestion(this.getKeynode(question_idtf), params).done( question => {
+            window.sctpClient.create_arc(sc_type_arc_pos_const_perm, this.getKeynode('question_initiated'), question).done( () => {
+
                 var eventID;
-                window.sctpClient.event_create(SctpEventType.SC_EVENT_ADD_INPUT_ARC, question, () => {
-                    window.scHelper.checkEdge(this.getKeynode('question_finished'), sc_type_arc_pos_const_perm, question).done(() => {
-                        window.sctpClient.event_destroy(eventID);
-                        dfd.resolve();
+                window.sctpClient.event_create(SctpEventType.SC_EVENT_ADD_INPUT_ARC, question, (addr, arg) => {
+
+                    window.sctpClient.get_arc(arg).done( arc => {
+                        if (arc[0] == this.getKeynode('question_finished'))
+                        {
+                            this._debugMessage(`SearchComponent: ${question_idtf} finished (event id = ${eventID})`);
+
+                            // TODO: fix event destroying 
+                            /*
+                            window.sctpClient.event_destroy(eventID).done( () => {
+                                this._debugMessage(`SearchComponent: destroyed event (id = ${eventID})`);
+                            }).fail( () => {
+                                this._debugMessage(`SearchComponent: failed to destroy event (id = ${eventID})`);
+                            });
+                            */
+
+                            dfd.resolve();
+                        }
                     });
-                }).done(
-                    (ID) => eventID = ID
+                }).done( ID => {
+                        this._debugMessage(`SearchComponent: registered event for '${question_idtf}' (event id = ${ID})`);
+                        eventID = ID;
+                    }
                 ).fail(
                     () => dfd.reject()
                 );

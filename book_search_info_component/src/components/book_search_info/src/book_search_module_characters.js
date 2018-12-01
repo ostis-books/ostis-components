@@ -1,8 +1,6 @@
 function ModuleCharacters(parent) {
     this.parent = parent;
 
-    this.sc_type_arc_pos_var_perm = (sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm);
-
     this.characters = 0;
     this.maxCharacters = 5;
 }
@@ -12,7 +10,8 @@ ModuleCharacters.prototype = {
     getRequiredKeynodes: function () {
         return [
             'gender',
-            'nrel_character_type'
+            'nrel_character_type',
+            'question_append_character_to_pattern'
         ];
     },
 
@@ -20,6 +19,7 @@ ModuleCharacters.prototype = {
         var criteriaCount = 0;
 
         for (var i = 0; i < this.characters; ++i) {
+
             if ($(`#name_field_${i}`).val() != "")
                 ++criteriaCount;
 
@@ -34,7 +34,7 @@ ModuleCharacters.prototype = {
     },
 
     initMarkup : function (containerId) {
-        this.parent._debugMessage("ModuleCharacters: initializing html");
+        this._debugMessage("initializing html");
 
         var container = $('#' + containerId);
 
@@ -54,15 +54,119 @@ ModuleCharacters.prototype = {
     },
 
     onKeynodesResolved: function () {
-        this.parent._debugMessage("ModuleCharacters: keynodes resolved (nothing to do)");
+        this._debugMessage("keynodes resolved (nothing to do)");
     },
 
     appendCriteriaToPattern: function (pattern) {
-        this.parent._debugMessage("ModuleCharacters: appending selected criteria to pattern");
+        this._debugMessage(`appending selected criteria to pattern (${this.characters} characters)`);
 
         var dfd = new jQuery.Deferred();
 
-        dfd.resolve();
+        // append each character to pattern
+        var promises = [];
+        for (var i = 0; i < this.characters; ++i) {
+            promises.push(this._appendCharacterToPattern(pattern, i));
+        }
+
+        Promise.all(promises).then(
+            () => dfd.resolve()
+        ).catch(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendCharacterToPattern: function (pattern, index) {
+        this._debugMessage(`appending character ${index} to pattern`);
+        
+        var dfd = new jQuery.Deferred();
+
+        window.sctpClient.create_node(sc_type_const).done( params => {
+
+            var promises = [];
+            promises.push(this.parent.appendParameter(params, pattern, this._getKeynode("rrel_1")));
+
+            var name = $(`#name_field_${index}`).val();
+            if (name != "")
+                promises.push(this._appendCharacterNameParameter(params, index));
+
+            if ($(`#genre_check_${index}`).prop('checked'))
+                promises.push(this._appendCharacterGenderParameter(params, index));
+
+            if ($(`#lang_check_${index}`).prop('checked'))
+                promises.push(this._appendCharacterTypeParameter(params, index));
+
+            Promise.all(promises).then(() => {
+                this.parent.initializeAgent('question_append_character_to_pattern', params).done(
+                    () => dfd.resolve()
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).catch(
+                () => dfd.reject()
+            );
+
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendCharacterNameParameter: function (params, index) {
+        var dfd = new jQuery.Deferred();
+        
+        window.sctpClient.create_link().done( nameLink => {
+
+            var name = $(`#name_field_${index}`).val();
+
+            this._debugMessage(`appending name "${name}" of character ${index}`);
+
+            window.sctpClient.set_link_content(nameLink, name).done(() => {
+                this.parent.appendParameter(params, nameLink, this._getKeynode("rrel_2")).done(
+                    () => dfd.resolve()
+                ).fail(
+                    () => dfd.reject()
+                );
+            }).fail(
+                () => dfd.reject()
+            );
+        }).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendCharacterGenderParameter: function (params, index) {
+        var dfd = new jQuery.Deferred();
+
+        var label = $(`#gender_select_${index} option:selected`).text();
+        this._debugMessage(`appending gender "${label}" of character ${index}`);
+
+        var gender = $(`#gender_select_${index} option:selected`).val();
+        this.parent.appendParameter(params, gender, this._getKeynode("rrel_3")).done(
+            () => dfd.resolve()
+        ).fail(
+            () => dfd.reject()
+        );
+
+        return dfd.promise();
+    },
+
+    _appendCharacterTypeParameter: function (params, index) {
+        var dfd = new jQuery.Deferred();
+
+        var label = $(`#type_select_${index} option:selected`).text();
+        this._debugMessage(`appending type "${label}" of character ${index}`);
+
+        var type = $(`#type_select_${index} option:selected`).val();
+        this.parent.appendParameter(params, type, this._getKeynode("rrel_4")).done(
+            () => dfd.resolve()
+        ).fail(
+            () => dfd.reject()
+        );
 
         return dfd.promise();
     },
@@ -80,7 +184,7 @@ ModuleCharacters.prototype = {
         var index = this.characters;
         this.characters += 1;
 
-        this.parent._debugMessage(`ModuleCharacters: adding character ${index}`);
+        this._debugMessage(`adding character ${index}`);
 
         // name
         $('#characters_form').append(
@@ -122,16 +226,16 @@ ModuleCharacters.prototype = {
 
         // enable/disable gender select on checkbox click
         var gender_check = $(`#gender_check_${index}`);
-        gender_check.click(() => {
+        gender_check.click( () => {
             var checked = gender_check.prop('checked');
-            gender_check.prop('disabled', !checked);
+            $(`#gender_select_${index}`).prop('disabled', !checked);
         });
 
         // enable/disable type select on checkbox click
         var type_check = $(`#type_check_${index}`);
-        type_check.click(() => {
+        type_check.click( () => {
             var checked = type_check.prop('checked');
-            type_check.prop('disabled', !checked);
+            $(`#type_select_${index}`).prop('disabled', !checked);
         });
 
         this._fillDropdownLists(index);
@@ -142,24 +246,28 @@ ModuleCharacters.prototype = {
     },
 
     _fillDropdownLists: function (index) {
-        this.parent._debugMessage(`ModuleCharacters: filling dropdown lists for character ${index}`);
+        this._debugMessage(`filling dropdown lists for character ${index}`);
 
         // fill genders list
-        window.scHelper.getSetElements(this._getKeynode('gender')).done(genders => {
+        window.scHelper.getSetElements(this._getKeynode('gender')).done( genders => {
             $.each(genders, (i, gender_addr) => {
-                window.scHelper.getIdentifier(gender_addr, scKeynodes.lang_ru).done(gender_idtf => {
+                window.scHelper.getIdentifier(gender_addr, scKeynodes.lang_ru).done( gender_idtf => {
                     $(`#gender_select_${index}`).append($('<option>', { value : gender_addr }).text(gender_idtf));
                 })
             });
         });
 
         // fill types list
-        window.scHelper.getSetElements(this._getKeynode('nrel_character_type')).done(types => {
+        window.scHelper.getSetElements(this._getKeynode('nrel_character_type')).done( types => {
             $.each(types, (i, type_addr) => {
-                window.scHelper.getIdentifier(type_addr, scKeynodes.lang_ru).done(type_idtf => {
+                window.scHelper.getIdentifier(type_addr, scKeynodes.lang_ru).done( type_idtf => {
                     $(`#type_select_${index}`).append($('<option>', { value : type_addr }).text(type_idtf));
                 })
             });
         });
+    },
+
+    _debugMessage: function (msg) {
+        this.parent._debugMessage("ModuleCharacters: " + msg);
     }
 };
