@@ -105,102 +105,29 @@ BookSearchByEvents.PaintPanel.prototype = {
 
   _addNewParam: function(divId) {
     var container = $("#" + divId);
-    var literary_event_addr,
-      event_death_addr,
-      event_medical_action_addr,
-      event_deceit_addr,
-      event_attempted_murder_addr,
-      event_medical_examination_addr,
-      event_acquaintance_addr,
-      event_breakup_addr,
-      event_love_addr,
-      event_suicide_addr,
-      event_finality_addr,
-      event_operation_addr,
-      event_mischief_addr,
-      event_murder_addr,
-      event_death_of_the_protagonist_addr;
-    var resolving_addrs = [
-      "literary_event",
-      "event_death",
-      "event_medical_action",
-      "event_deceit",
-      "event_attempted_murder",
-      "event_medical_examination",
-      "event_acquaintance",
-      "event_breakup",
-      "event_love",
-      "event_suicide",
-      "event_finality",
-      "event_operation",
-      "event_mischief",
-      "event_murder",
-      "event_death_of_the_protagonist"
-    ];
+    SCWeb.core.Server.resolveScAddr(["literary_event"], function(keynodes) {
+      var literary_event_addr = keynodes["literary_event"];
+      window.sctpClient
+        .iterate_elements(SctpIteratorType.SCTP_ITERATOR_3F_A_A, [
+          literary_event_addr,
+          sc_type_arc_pos_const_perm | sc_type_const,
+          sc_type_node
+        ])
+        .done(function(events) {
+          var events_addr = events.map(event => event[2]);
+          SCWeb.core.Server.resolveIdentifiers(events_addr, function(keynodes) {
+            var event_types_name = [];
+            var strProm = '<select id ="event_type">';
+            for (var i = 0; i <= events_addr.length - 1; i++) {
+              event_types_name[i] = keynodes[events_addr[i]];
+              strProm += '<option value="' + events_addr[i];
+              strProm += '">' + event_types_name[i] + "</option>";
+            }
+            strProm += "</select>";
 
-    SCWeb.core.Server.resolveScAddr(resolving_addrs, function(keynodes) {
-      literary_event_addr = keynodes["literary_event"];
-      event_death_addr = keynodes["event_death"];
-      event_medical_action_addr = keynodes["event_medical_action"];
-      event_deceit_addr = keynodes["event_deceit"];
-      event_attempted_murder_addr = keynodes["event_attempted_murder"];
-      event_medical_examination_addr = keynodes["event_medical_examination"];
-      event_acquaintance_addr = keynodes["event_acquaintance"];
-      event_breakup_addr = keynodes["event_breakup"];
-      event_love_addr = keynodes["event_love"];
-      event_suicide_addr = keynodes["event_suicide"];
-      event_finality_addr = keynodes["event_finality"];
-      event_operation_addr = keynodes["event_operation"];
-      event_mischief_addr = keynodes["event_mischief"];
-      event_murder_addr = keynodes["event_murder"];
-      event_death_of_the_protagonist_addr =
-        keynodes["event_death_of_the_protagonist"];
-      var all_addr = [
-        literary_event_addr,
-        event_death_addr,
-        event_medical_action_addr,
-        event_deceit_addr,
-        event_attempted_murder_addr,
-        event_medical_examination_addr,
-        event_acquaintance_addr,
-        event_breakup_addr,
-        event_love_addr,
-        event_suicide_addr,
-        event_finality_addr,
-        event_operation_addr,
-        event_mischief_addr,
-        event_murder_addr,
-        event_death_of_the_protagonist_addr
-      ];
-      SCWeb.core.Server.resolveIdentifiers(all_addr, function(keynodes) {
-        var event_types = [
-          event_death_addr,
-          event_medical_action_addr,
-          event_deceit_addr,
-          event_attempted_murder_addr,
-          event_medical_examination_addr,
-          event_acquaintance_addr,
-          event_breakup_addr,
-          event_love_addr,
-          event_suicide_addr,
-          event_finality_addr,
-          event_operation_addr,
-          event_mischief_addr,
-          event_murder_addr,
-          event_death_of_the_protagonist_addr
-        ];
-        var event_types_name = [];
-
-        var strProm = '<select id ="event_type">';
-        for (var i = 0; i <= event_types.length - 1; i++) {
-          event_types_name[i] = keynodes[event_types[i]];
-          strProm += '<option value="' + event_types[i];
-          strProm += '">' + event_types_name[i] + "</option>";
-        }
-        strProm += "</select>";
-
-        container.append(strProm);
-      });
+            container.append(strProm);
+          });
+        });
     });
   },
 
@@ -219,133 +146,46 @@ BookSearchByEvents.PaintPanel.prototype = {
   _createNewPattern: function(eventsNumber, allInfoNode) {
     var self = this;
 
-    var literary_event_addr,
-      event_death_addr,
-      event_medical_action_addr,
-      event_deceit_addr,
-      event_attempted_murder_addr,
-      event_medical_examination_addr,
-      event_acquaintance_addr,
-      event_breakup_addr,
-      event_love_addr,
-      event_suicide_addr,
-      event_finality_addr,
-      event_operation_addr,
-      event_mischief_addr,
-      event_murder_addr,
-      event_death_of_the_protagonist_addr;
-    var resolving_addrs = [
-      "literary_event",
-      "event_death",
-      "event_medical_action",
-      "event_deceit",
-      "event_attempted_murder",
-      "event_medical_examination",
-      "event_acquaintance",
-      "event_breakup",
-      "event_love",
-      "event_suicide",
-      "event_finality",
-      "event_operation",
-      "event_mischief",
-      "event_murder",
-      "event_death_of_the_protagonist"
-    ];
+    var temp_event = "new_event_" + eventsNumber;
 
-    SCWeb.core.Server.resolveScAddr(resolving_addrs, function(keynodes) {
-      literary_event_addr = keynodes["literary_event"];
-      event_death_addr = keynodes["event_death"];
-      event_medical_action_addr = keynodes["event_medical_action"];
-      event_deceit_addr = keynodes["event_deceit"];
-      event_attempted_murder_addr = keynodes["event_attempted_murder"];
-      event_medical_examination_addr = keynodes["event_medical_examination"];
-      event_acquaintance_addr = keynodes["event_acquaintance"];
-      event_breakup_addr = keynodes["event_breakup"];
-      event_love_addr = keynodes["event_love"];
-      event_suicide_addr = keynodes["event_suicide"];
-      event_finality_addr = keynodes["event_finality"];
-      event_operation_addr = keynodes["event_operation"];
-      event_mischief_addr = keynodes["event_mischief"];
-      event_murder_addr = keynodes["event_murder"];
-      event_death_of_the_protagonist_addr =
-        keynodes["event_death_of_the_protagonist"];
-      var all_addr = [
-        literary_event_addr,
-        event_death_addr,
-        event_medical_action_addr,
-        event_deceit_addr,
-        event_attempted_murder_addr,
-        event_medical_examination_addr,
-        event_acquaintance_addr,
-        event_breakup_addr,
-        event_love_addr,
-        event_suicide_addr,
-        event_finality_addr,
-        event_operation_addr,
-        event_mischief_addr,
-        event_murder_addr,
-        event_death_of_the_protagonist_addr
-      ];
-      var temp_event = "new_event_" + eventsNumber;
-
-      // создаем узел события
-      new Promise(function(resolve) {
-        window.sctpClient
-          .create_node(sc_type_node | sc_type_var)
-          .done(function(nameGenEvent) {
-            console.log("creation of event's node", nameGenEvent);
-            window.sctpClient.create_link().done(function(nameGenEventLink) {
-              self._addToPattern(allInfoNode, nameGenEvent);
-              window.sctpClient.set_link_content(nameGenEventLink, temp_event);
-              window.sctpClient
-                .create_arc(
-                  sc_type_arc_common | sc_type_var,
-                  nameGenEvent,
-                  nameGenEventLink
-                )
-                .done(function(nameGenEventCommonArc) {
-                  //window.sctpClient.create_arc(sc_type_arc_pos_const_perm, allInfoNode, nameGenEventCommonArc);
-                  window.sctpClient
-                    .create_arc(
-                      self.sc_type_arc_pos_var_perm,
-                      scKeynodes.nrel_system_identifier,
-                      nameGenEventCommonArc
-                    )
-                    .done(function() {
-                      console.log("generated ", nameGenEvent, temp_event);
-                      window.sctpClient
-                        .create_arc(
-                          self.sc_type_arc_pos_var_perm,
-                          literary_event_addr,
-                          nameGenEvent
-                        )
-                        .done(function(genArc) {
-                          self._addToPattern(allInfoNode, genArc);
-                          self._addToPattern(allInfoNode, literary_event_addr);
-                        });
-                      resolve(nameGenEvent);
-                    });
-                });
-            });
+    // создаем узел события
+    new Promise(function(resolve) {
+      window.sctpClient
+        .create_node(sc_type_node | sc_type_var)
+        .done(function(nameGenEvent) {
+          console.log("creation of event's node", nameGenEvent);
+          window.sctpClient.create_link().done(function(nameGenEventLink) {
+            self._addToPattern(allInfoNode, nameGenEvent);
+            window.sctpClient.set_link_content(nameGenEventLink, temp_event);
+            window.sctpClient
+              .create_arc(
+                sc_type_arc_common | sc_type_var,
+                nameGenEvent,
+                nameGenEventLink
+              )
+              .done(function() {
+                resolve(nameGenEvent);
+              });
           });
-      }).then(response => {
-        window.sctpClient
-          .create_arc(
-            self.sc_type_arc_pos_var_perm,
-            $("#event_type option:selected").val(),
-            response
-          )
-          .done(function(nameGenEventType) {
-            self._addToPattern(allInfoNode, nameGenEventType);
-            self._addToPattern(
-              allInfoNode,
-              $("#event_type option:selected").val()
-            );
-            console.log("everything is okey. Pattern was created");
-          });
-      });
-      patternIsCreated = true;
-      eventsNumber++;
+        });
+    }).then(response => {
+      window.sctpClient
+        .create_arc(
+          self.sc_type_arc_pos_var_perm,
+          $("#event_type option:selected").val(),
+          response
+        )
+        .done(function(nameGenEventType) {
+          self._addToPattern(allInfoNode, nameGenEventType);
+          self._addToPattern(
+            allInfoNode,
+            $("#event_type option:selected").val()
+          );
+          console.log("everything is okey. Pattern was created");
+        });
     });
+    patternIsCreated = true;
+    eventsNumber++;
   }
 };
+
