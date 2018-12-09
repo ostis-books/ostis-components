@@ -1,6 +1,6 @@
 // PaintPanel
 
-BookSearchInfo.PaintPanel = function (containerId) {
+BookSearchUnified.PaintPanel = function (containerId) {
     this.containerId = containerId;
 
     this.modules = [
@@ -14,7 +14,7 @@ BookSearchInfo.PaintPanel = function (containerId) {
     this.sc_type_arc_pos_var_perm = (sc_type_arc_access | sc_type_var | sc_type_arc_pos | sc_type_arc_perm);
 };
 
-BookSearchInfo.PaintPanel.prototype = {
+BookSearchUnified.PaintPanel.prototype = {
 
     init: function () {
         this._debugMessage("SearchComponent: initialize");

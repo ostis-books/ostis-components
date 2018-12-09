@@ -1,15 +1,15 @@
-BookSearchInfo.DrawComponent = {
-    ext_lang: 'book_search_info_view',
-    formats: ['format_book_search_info'],
+BookSearchUnified.DrawComponent = {
+    ext_lang: 'book_search_unified_view',
+    formats: ['format_book_search_unified'],
     struct_support: true,
     factory: function (sandbox) {
-        return new BookSearchInfo.DrawWindow(sandbox);
+        return new BookSearchUnified.DrawWindow(sandbox);
     }
 };
 
-BookSearchInfo.DrawWindow = function (sandbox) {
+BookSearchUnified.DrawWindow = function (sandbox) {
     this.sandbox = sandbox;
-    this.paintPanel = new BookSearchInfo.PaintPanel(this.sandbox.container);
+    this.paintPanel = new BookSearchUnified.PaintPanel(this.sandbox.container);
     this.paintPanel.init();
     this.recieveData = function (data) {
         console.log("in recieve data" + data);
@@ -88,4 +88,4 @@ BookSearchInfo.DrawWindow = function (sandbox) {
     this.sandbox.eventStructUpdate = $.proxy(this.eventStructUpdate, this);
     this.sandbox.updateContent();
 };
-SCWeb.core.ComponentManager.appendComponentInitialize(BookSearchInfo.DrawComponent);
+SCWeb.core.ComponentManager.appendComponentInitialize(BookSearchUnified.DrawComponent);
