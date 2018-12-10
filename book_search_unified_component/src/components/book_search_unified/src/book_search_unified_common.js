@@ -1,4 +1,4 @@
-var BookSearchInfo = {};
+var BookSearchUnified = {};
 
 function extend(child, parent) {
     var F = function () {
