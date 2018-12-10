@@ -9,8 +9,9 @@ ModuleCharacters.prototype = {
 
     getRequiredKeynodes: function () {
         return [
-            'gender',
-            'nrel_character_type',
+            'male',
+            'female',
+            'rrel_main_character',
             'question_append_character_to_pattern'
         ];
     },
@@ -249,21 +250,21 @@ ModuleCharacters.prototype = {
         this._debugMessage(`filling dropdown lists for character ${index}`);
 
         // fill genders list
-        window.scHelper.getSetElements(this._getKeynode('gender')).done( genders => {
-            $.each(genders, (i, gender_addr) => {
-                window.scHelper.getIdentifier(gender_addr, scKeynodes.lang_ru).done( gender_idtf => {
-                    $(`#gender_select_${index}`).append($('<option>', { value : gender_addr }).text(gender_idtf));
-                })
-            });
+        var gender = [ this._getKeynode('male'), this._getKeynode('female') ];
+
+        $.each(gender, (i, gender_addr) => {
+            window.scHelper.getIdentifier(gender_addr, scKeynodes.lang_ru).done( gender_idtf => {
+                $(`#gender_select_${index}`).append($('<option>', { value : gender_addr }).text(gender_idtf));
+            })
         });
 
-        // fill types list
-        window.scHelper.getSetElements(this._getKeynode('nrel_character_type')).done( types => {
-            $.each(types, (i, type_addr) => {
-                window.scHelper.getIdentifier(type_addr, scKeynodes.lang_ru).done( type_idtf => {
-                    $(`#type_select_${index}`).append($('<option>', { value : type_addr }).text(type_idtf));
-                })
-            });
+        // fill roles list
+        var roles = [ this._getKeynode('rrel_main_character') ];
+
+        $.each(roles, (i, type_addr) => {
+            window.scHelper.getIdentifier(type_addr, scKeynodes.lang_ru).done( type_idtf => {
+                $(`#type_select_${index}`).append($('<option>', { value : type_addr }).text(type_idtf));
+            })
         });
     },
 
