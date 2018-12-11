@@ -1,0 +1,6 @@
+sc_node_norole_relation -> nrel_narrative_mark;;
+
+nrel_narrative_mark=> nrel_main_idtf:
+	[итоговая оценка*]
+	(* <- lang_ru;; *);;
+

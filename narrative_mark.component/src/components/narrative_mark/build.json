@@ -1,0 +1,11 @@
+{
+     "sources": [
+        
+        "src/narrative_mark-common.js",
+        "src/narrative_mark-paintPanel.js"
+    ],
+
+    "component": "src/narrative_mark-component.js",
+
+    "target": "static/components/js/narrative_mark/narrative_mark.js"
+}

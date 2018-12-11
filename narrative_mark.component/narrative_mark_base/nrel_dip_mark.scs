@@ -1,0 +1,6 @@
+sc_node_norole_relation -> nrel_dip_mark;;
+
+nrel_dip_mark=> nrel_main_idtf:
+	[погружения в историю*]
+	(* <- lang_ru;; *);;
+

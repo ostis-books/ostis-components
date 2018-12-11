@@ -1,0 +1,6 @@
+sc_node_norole_relation -> nrel_world_mark;;
+
+nrel_world_mark=> nrel_main_idtf:
+	[оценка атмосферы*]
+	(* <- lang_ru;; *);;
+
