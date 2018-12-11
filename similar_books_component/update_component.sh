@@ -16,7 +16,7 @@ stage()
     echo -en $green"[$st]$rst" $blue"$1...\n"$rst
 }
 
-base_path=../components/book_search_info_component/src
+base_path=../components/similar_books_component/src
 sc_web_path=../sc-web/client
 sc_web_static_path=$sc_web_path/static
 
@@ -51,12 +51,12 @@ append_css()
 
 stage "Copy component"
 
-cp -Rfv $base_path/components/book_search_info/static/* $sc_web_static_path
+cp -Rfv $base_path/components/similar_books/static/* $sc_web_static_path
+cp -Rfv $base_path/components/similar_books/src/markup.html $sc_web_static_path/components/js/similar_books
 
 stage "Install component"
 
-append_js $sc_web_path/templates/components.html components/js/book_search_info/book_search_info.js
-append_css $sc_web_path/templates/components.html components/css/book_search_info.css
+append_js $sc_web_path/templates/components.html components/js/similar_books/similar_books.js
 
 cd ../sc-web/scripts
 ./install_deps_ubuntu.sh

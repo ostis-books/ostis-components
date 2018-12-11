@@ -102,6 +102,7 @@ function loadBooks(){
     })
 }
 
+
 // перевод загруженных с базы книг в формат для работы в js
 function convertBooks() {
     booksList = "<select  id='bookTxt' style=\"margin-bottom : 10px\">";
@@ -200,6 +201,7 @@ function updateBookList() {
         booksListForWishList = booksListForWishList + "<option value = " + book['attr'] + ">" + book['name']  + "</option>";
     }
 }
+
 
 // добавление книги в список желаний
 function _addBook() {
