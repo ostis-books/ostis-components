@@ -1,3 +1,0 @@
-concept_character_name<- concept;
-	=> nrel_main_idtf: [имя персонажа](* <- lang_ru;; *);;
-
