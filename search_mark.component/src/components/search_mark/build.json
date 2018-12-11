@@ -1,0 +1,11 @@
+{
+     "sources": [
+        
+        "src/search_mark-common.js",
+        "src/search_mark-paintPanel.js"
+    ],
+
+    "component": "src/search_mark-component.js",
+
+    "target": "static/components/js/search_mark/search_mark.js"
+}
