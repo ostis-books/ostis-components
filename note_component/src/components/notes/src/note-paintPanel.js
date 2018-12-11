@@ -102,6 +102,7 @@ function loadBooks(){
     })
 }
 
+
 // перевод загруженных с базы книг в формат для работы в js
 function convertBooks() {
     booksList = "<select  id='bookTxt' style=\"margin-bottom : 10px\">";
@@ -133,24 +134,56 @@ function convertBooks() {
                                 book_js['name'] = content;
                                 book_js['attr'] = identifiers[0][2];
                                 book_js['book_addr'] = books[books_id][2]
-                                books_id += 1;
-                                booksArray.push(book_js)
-                                booksList = booksList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
-                                window.sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_3F_A_F, [
-                                    concept_wish_list_addr,
-                                    sc_type_arc_pos_const_perm,
-                                    book
-                                ])
-                                .done(function (result){
-                                    console.log(booksArrayForWishList)
-                                    console.log(book_js)
-                                })
-                                .fail(function (result) {
-                                    if (!booksArrayForWishList.includes(book_js)){
-                                        booksArrayForWishList.push(book_js)
-                                        booksListForWishList = booksListForWishList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
+                                if (booksArray.length == 0){
+                                    booksArray.push(book_js)
+                                    books_id += 1;
+                                    booksList = booksList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
+                                    window.sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_3F_A_F, [
+                                        concept_wish_list_addr,
+                                        sc_type_arc_pos_const_perm,
+                                        book
+                                    ])
+                                    .done(function (result){
+                                        console.log(booksArrayForWishList)
+                                        console.log(book_js)
+                                    })
+                                    .fail(function (result) {
+                                        if (!booksArrayForWishList.includes(book_js)){
+                                            booksArrayForWishList.push(book_js)
+                                            booksListForWishList = booksListForWishList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
+                                        }
+                                    });
+                                }
+                                else{
+                                    ArrayLenght = booksArray.length
+                                    addBook = true
+                                    for (var book_var=0; book_var<ArrayLenght; book_var++){
+                                        if (book_js.name == booksArray[book_var].name){
+                                            addBook = false
+                                        }
                                     }
-                                });
+                                    if (addBook){
+                                        booksArray.push(book_js)
+                                        books_id += 1;
+                                        booksList = booksList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
+                                        window.sctpClient.iterate_elements(SctpIteratorType.SCTP_ITERATOR_3F_A_F, [
+                                            concept_wish_list_addr,
+                                            sc_type_arc_pos_const_perm,
+                                            book
+                                        ])
+                                        .done(function (result){
+                                            console.log(booksArrayForWishList)
+                                            console.log(book_js)
+                                        })
+                                        .fail(function (result) {
+                                            if (!booksArrayForWishList.includes(book_js)){
+                                                booksArrayForWishList.push(book_js)
+                                                booksListForWishList = booksListForWishList + "<option value = " + identifiers[0][2] + ">" + content + "</option>";
+                                            }
+                                        });
+                                    }
+
+                                }
                             });
                     });
             }
@@ -168,6 +201,7 @@ function updateBookList() {
         booksListForWishList = booksListForWishList + "<option value = " + book['attr'] + ">" + book['name']  + "</option>";
     }
 }
+
 
 // добавление книги в список желаний
 function _addBook() {
