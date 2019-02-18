@@ -83,10 +83,10 @@ BookSearchByEvents.PaintPanel.prototype = {
   _searchBook: function(allEventsNode) {
     console.log("run search");
 
-    SCWeb.core.Server.resolveScAddr(["ui_menu_search_book_by_events"], function(
+    SCWeb.core.Server.resolveScAddr(["ui_menu_file_for_finding_book_by_event"], function(
       data
     ) {
-      var cmd = data["ui_menu_search_book_by_events"];
+      var cmd = data["ui_menu_file_for_finding_book_by_event"];
       SCWeb.core.Main.doCommand(cmd, [allEventsNode], function(result) {
         if (result.question != undefined) {
           SCWeb.ui.WindowManager.appendHistoryItem(result.question);
@@ -146,44 +146,9 @@ BookSearchByEvents.PaintPanel.prototype = {
   _createNewPattern: function(eventsNumber, allInfoNode) {
     var self = this;
 
-    var temp_event = "new_event_" + eventsNumber;
+    self._addToPattern(allInfoNode, $("#event_type option:selected").val());
+    console.log("everything is okey. Pattern was created");
 
-    // создаем узел события
-    new Promise(function(resolve) {
-      window.sctpClient
-        .create_node(sc_type_node | sc_type_var)
-        .done(function(nameGenEvent) {
-          console.log("creation of event's node", nameGenEvent);
-          window.sctpClient.create_link().done(function(nameGenEventLink) {
-            self._addToPattern(allInfoNode, nameGenEvent);
-            window.sctpClient.set_link_content(nameGenEventLink, temp_event);
-            window.sctpClient
-              .create_arc(
-                sc_type_arc_common | sc_type_var,
-                nameGenEvent,
-                nameGenEventLink
-              )
-              .done(function() {
-                resolve(nameGenEvent);
-              });
-          });
-        });
-    }).then(response => {
-      window.sctpClient
-        .create_arc(
-          self.sc_type_arc_pos_var_perm,
-          $("#event_type option:selected").val(),
-          response
-        )
-        .done(function(nameGenEventType) {
-          self._addToPattern(allInfoNode, nameGenEventType);
-          self._addToPattern(
-            allInfoNode,
-            $("#event_type option:selected").val()
-          );
-          console.log("everything is okey. Pattern was created");
-        });
-    });
     patternIsCreated = true;
     eventsNumber++;
   }
