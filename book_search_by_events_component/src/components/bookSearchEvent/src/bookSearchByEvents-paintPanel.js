@@ -72,7 +72,7 @@ BookSearchByEvents.PaintPanel.prototype = {
       });
 
       $("#create-pattern").click(function() {
-        self._createNewPattern(numerOfFields, response);
+        self._createNewPattern(response);
       });
       $("#search-button").click(function() {
         self._searchBook(response);
@@ -143,7 +143,7 @@ BookSearchByEvents.PaintPanel.prototype = {
       alert("Необходимо сформировать шаблон, иначе данные будут потеряны!");
   },
   /*формирование шаблона*/
-  _createNewPattern: function(eventsNumber, allInfoNode) {
+  _createNewPattern: function(allInfoNode) {
     var self = this;
 
     self._addToPattern(allInfoNode, $("#event_type option:selected").val());
